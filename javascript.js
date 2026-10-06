@@ -8,6 +8,112 @@ const blackTransition = document.querySelector("#black-transition");
 
 
 /* =========================================================
+   MUSIC
+========================================================= */
+
+const trailSound =
+  document.querySelector("#trailSound");
+
+trailSound.volume = 0.5;
+
+let audioUnlocked = false;
+let soundStopTimer = null;
+
+
+/* =========================================================
+   UNLOCK AUDIO
+========================================================= */
+
+document.addEventListener(
+  "click",
+  () => {
+
+    if (audioUnlocked) {
+      return;
+    }
+
+    trailSound.muted = true;
+
+    trailSound.play()
+      .then(() => {
+
+        trailSound.pause();
+
+        trailSound.currentTime = 0;
+
+        trailSound.muted = false;
+
+        audioUnlocked = true;
+
+      })
+      .catch(() => {
+
+        trailSound.muted = false;
+
+      });
+
+  },
+  { once: true }
+);
+
+
+/* =========================================================
+   START MUSIC
+========================================================= */
+
+function startTrailSound() {
+
+  if (!audioUnlocked) {
+    return;
+  }
+
+  clearTimeout(soundStopTimer);
+
+  if (trailSound.paused) {
+
+    trailSound.play()
+      .catch(() => {});
+
+  }
+
+}
+
+
+/* =========================================================
+   STOP MUSIC WHEN MOUSE STOPS
+========================================================= */
+
+function stopTrailSound() {
+
+  clearTimeout(soundStopTimer);
+
+  soundStopTimer =
+    setTimeout(
+      () => {
+
+        trailSound.pause();
+
+      },
+      150
+    );
+
+}
+
+
+/* =========================================================
+   STOP MUSIC COMPLETELY
+========================================================= */
+
+function stopTrailSoundCompletely() {
+
+  clearTimeout(soundStopTimer);
+
+  trailSound.pause();
+
+}
+
+
+/* =========================================================
    MODE
 ========================================================= */
 
@@ -244,23 +350,15 @@ const styleSheet =
 
 styleSheet.textContent = `
 
-
-/* =========================================================
-   APPLE-STYLE FLOAT
-========================================================= */
-
 @keyframes appleFloat {
 
   0% {
-
     transform:
       translate(0, 0)
       rotate(0deg);
-
   }
 
   25% {
-
     transform:
       translate(
         calc(var(--move-x) * 0.35),
@@ -269,11 +367,9 @@ styleSheet.textContent = `
       rotate(
         calc(var(--move-r) * 0.3)
       );
-
   }
 
   50% {
-
     transform:
       translate(
         var(--move-x),
@@ -282,11 +378,9 @@ styleSheet.textContent = `
       rotate(
         var(--move-r)
       );
-
   }
 
   75% {
-
     transform:
       translate(
         calc(var(--move-x) * 0.55),
@@ -295,291 +389,195 @@ styleSheet.textContent = `
       rotate(
         calc(var(--move-r) * 0.5)
       );
-
   }
 
   100% {
-
     transform:
       translate(0, 0)
       rotate(0deg);
-
   }
 
 }
 
-
-/* =========================================================
-   TITLE → BLACK
-========================================================= */
 
 @keyframes titleToBlack {
 
   0% {
-
     transform:
       translate(-50%, -50%)
       scale(1);
-
     opacity: 1;
-
   }
 
   18% {
-
     transform:
       translate(-50%, -50%)
       scale(0.86);
-
     opacity: 1;
-
   }
 
   36% {
-
     transform:
       translate(-50%, -50%)
       scale(0.35);
-
     opacity: 1;
-
   }
 
   48% {
-
     transform:
       translate(-50%, -50%)
       scale(0.055);
-
     opacity: 1;
-
   }
 
   58% {
-
     transform:
       translate(-50%, -50%)
       scale(0.08);
-
     opacity: 1;
-
   }
 
   72% {
-
     transform:
       translate(-50%, -50%)
       scale(1.1);
-
     opacity: 1;
-
   }
 
   88% {
-
     transform:
       translate(-50%, -50%)
       scale(5);
-
     opacity: 0.65;
-
   }
 
   100% {
-
     transform:
       translate(-50%, -50%)
       scale(16);
-
     opacity: 0;
-
   }
 
 }
 
-
-/* =========================================================
-   BLACK SCREEN REVEAL
-
-   VERY SMOOTH CENTER EXPANSION
-
-   The circle no longer jumps through
-   multiple noticeable stages.
-========================================================= */
 
 @keyframes blackReveal {
 
   0% {
-
     clip-path:
       circle(0% at 50% 50%);
-
     opacity: 1;
-
   }
 
   20% {
-
     clip-path:
       circle(0.15% at 50% 50%);
-
     opacity: 1;
-
   }
 
   40% {
-
     clip-path:
       circle(1.5% at 50% 50%);
-
     opacity: 1;
-
   }
 
   60% {
-
     clip-path:
       circle(12% at 50% 50%);
-
     opacity: 1;
-
   }
 
   78% {
-
     clip-path:
       circle(45% at 50% 50%);
-
     opacity: 1;
-
   }
 
   90% {
-
     clip-path:
       circle(90% at 50% 50%);
-
     opacity: 1;
-
   }
 
   100% {
-
     clip-path:
       circle(160% at 50% 50%);
-
     opacity: 1;
-
   }
 
 }
 
-
-/* =========================================================
-   BLACK → TITLE
-========================================================= */
 
 @keyframes blackToTitle {
 
   0% {
-
     clip-path:
       circle(160% at 50% 50%);
-
   }
 
   25% {
-
     clip-path:
       circle(80% at 50% 50%);
-
   }
 
   50% {
-
     clip-path:
       circle(35% at 50% 50%);
-
   }
 
   68% {
-
     clip-path:
       circle(8% at 50% 50%);
-
   }
 
   78% {
-
     clip-path:
       circle(1% at 50% 50%);
-
   }
 
   100% {
-
     clip-path:
       circle(0% at 50% 50%);
-
   }
 
 }
 
 
-/* =========================================================
-   TITLE REAPPEAR
-========================================================= */
-
 @keyframes titleAppear {
 
   0% {
-
     transform:
       translate(-50%, -50%)
       scale(0.055);
-
     opacity: 0;
-
   }
 
   20% {
-
     transform:
       translate(-50%, -50%)
       scale(0.055);
-
     opacity: 1;
-
   }
 
   45% {
-
     transform:
       translate(-50%, -50%)
       scale(0.15);
-
     opacity: 1;
-
   }
 
   70% {
-
     transform:
       translate(-50%, -50%)
       scale(0.72);
-
     opacity: 1;
-
   }
 
   100% {
-
     transform:
       translate(-50%, -50%)
       scale(1);
-
     opacity: 1;
-
   }
 
 }
@@ -608,42 +606,18 @@ function enterBlackScreen() {
     return;
   }
 
-
   transitioning = true;
 
-
-  /*
-    Keep the cards underneath
-    while the black circle begins.
-  */
+  stopTrailSoundCompletely();
 
   body.className =
     "black-transition";
 
-
-  /*
-    Title movement.
-  */
-
   title.style.animation =
     "titleToBlack 2.15s cubic-bezier(0.16, 1, 0.3, 1) forwards";
 
-
-  /*
-    Smooth black circle.
-
-    Using a single smooth easing curve
-    instead of the default stepped feeling.
-  */
-
   blackTransition.style.animation =
     "blackReveal 2.15s cubic-bezier(0.16, 1, 0.3, 1) forwards";
-
-
-  /*
-    Only remove everything after
-    the animation has completely finished.
-  */
 
   setTimeout(
     () => {
@@ -681,9 +655,7 @@ title.addEventListener(
     }
 
 
-    /* -----------------------------------------------------
-       CARD → BLACK
-    ----------------------------------------------------- */
+    /* CARD → BLACK */
 
     if (currentMode === 3) {
 
@@ -693,11 +665,11 @@ title.addEventListener(
     }
 
 
-    /* -----------------------------------------------------
-       IMAGE → WORD
-    ----------------------------------------------------- */
+    /* IMAGE → WORD */
 
     if (currentMode === 1) {
+
+      stopTrailSoundCompletely();
 
       currentMode = 2;
 
@@ -708,11 +680,11 @@ title.addEventListener(
     }
 
 
-    /* -----------------------------------------------------
-       WORD → CARDS
-    ----------------------------------------------------- */
+    /* WORD → CARDS */
 
     if (currentMode === 2) {
+
+      stopTrailSoundCompletely();
 
       currentMode = 3;
 
@@ -741,13 +713,10 @@ blackTransition.addEventListener(
       return;
     }
 
-
     transitioning = true;
-
 
     body.className =
       "black-transition";
-
 
     title.style.display =
       "block";
@@ -758,14 +727,11 @@ blackTransition.addEventListener(
     title.style.transform =
       "translate(-50%, -50%) scale(0.055)";
 
-
     blackTransition.style.animation =
       "blackToTitle 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards";
 
-
     title.style.animation =
       "titleAppear 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards";
-
 
     setTimeout(
       () => {
@@ -775,13 +741,11 @@ blackTransition.addEventListener(
 
         currentMode = 1;
 
-
         blackTransition.style.animation =
           "none";
 
         blackTransition.style.opacity =
           "0";
-
 
         title.style.animation =
           "none";
@@ -794,7 +758,6 @@ blackTransition.addEventListener(
 
         title.style.display =
           "";
-
 
         transitioning = false;
 
@@ -829,9 +792,7 @@ function makeCardInteractive(card) {
   let lastMoveTime = 0;
 
 
-  /* -------------------------------------------------------
-     POINTER DOWN
-  ------------------------------------------------------- */
+  /* POINTER DOWN */
 
   card.addEventListener(
     "pointerdown",
@@ -842,15 +803,11 @@ function makeCardInteractive(card) {
         e.target.tagName === "TEXTAREA" ||
         e.target.tagName === "BUTTON"
       ) {
-
         return;
-
       }
-
 
       const rect =
         card.getBoundingClientRect();
-
 
       startX =
         e.clientX;
@@ -858,13 +815,11 @@ function makeCardInteractive(card) {
       startY =
         e.clientY;
 
-
       originalLeft =
         rect.left;
 
       originalTop =
         rect.top;
-
 
       lastPointerX =
         e.clientX;
@@ -872,21 +827,16 @@ function makeCardInteractive(card) {
       lastPointerY =
         e.clientY;
 
-
       velocityX = 0;
       velocityY = 0;
-
 
       lastMoveTime =
         performance.now();
 
-
       moved = false;
-
 
       card.style.animation =
         "none";
-
 
       card.style.left =
         `${originalLeft}px`;
@@ -894,19 +844,15 @@ function makeCardInteractive(card) {
       card.style.top =
         `${originalTop}px`;
 
-
       card.style.transform =
         "none";
-
 
       card.style.transition =
         "none";
 
-
       card.setPointerCapture(
         e.pointerId
       );
-
 
       card.classList.add(
         "dragging"
@@ -916,9 +862,7 @@ function makeCardInteractive(card) {
   );
 
 
-  /* -------------------------------------------------------
-     POINTER MOVE
-  ------------------------------------------------------- */
+  /* POINTER MOVE */
 
   card.addEventListener(
     "pointermove",
@@ -929,15 +873,11 @@ function makeCardInteractive(card) {
           e.pointerId
         )
       ) {
-
         return;
-
       }
-
 
       const now =
         performance.now();
-
 
       const dx =
         e.clientX -
@@ -947,13 +887,11 @@ function makeCardInteractive(card) {
         e.clientY -
         startY;
 
-
       const deltaTime =
         Math.max(
           now - lastMoveTime,
           1
         );
-
 
       velocityX =
         (
@@ -962,14 +900,12 @@ function makeCardInteractive(card) {
         ) /
         deltaTime;
 
-
       velocityY =
         (
           e.clientY -
           lastPointerY
         ) /
         deltaTime;
-
 
       lastPointerX =
         e.clientX;
@@ -980,16 +916,12 @@ function makeCardInteractive(card) {
       lastMoveTime =
         now;
 
-
       if (
         Math.abs(dx) > 5 ||
         Math.abs(dy) > 5
       ) {
-
         moved = true;
-
       }
-
 
       card.style.left =
         `${originalLeft + dx}px`;
@@ -1001,9 +933,7 @@ function makeCardInteractive(card) {
   );
 
 
-  /* -------------------------------------------------------
-     POINTER UP
-  ------------------------------------------------------- */
+  /* POINTER UP */
 
   card.addEventListener(
     "pointerup",
@@ -1014,25 +944,19 @@ function makeCardInteractive(card) {
           e.pointerId
         )
       ) {
-
         return;
-
       }
-
 
       card.releasePointerCapture(
         e.pointerId
       );
-
 
       card.classList.remove(
         "dragging"
       );
 
 
-      /* ---------------------------------------------------
-         DRAGGED
-      --------------------------------------------------- */
+      /* DRAGGED */
 
       if (moved) {
 
@@ -1045,7 +969,6 @@ function makeCardInteractive(card) {
             )
           );
 
-
         const momentumY =
           Math.max(
             -45,
@@ -1055,23 +978,19 @@ function makeCardInteractive(card) {
             )
           );
 
-
         const currentLeft =
           parseFloat(
             card.style.left
           );
-
 
         const currentTop =
           parseFloat(
             card.style.top
           );
 
-
         card.style.transition =
           "left 0.65s cubic-bezier(0.16, 1, 0.3, 1), " +
           "top 0.65s cubic-bezier(0.16, 1, 0.3, 1)";
-
 
         card.style.left =
           `${currentLeft + momentumX}px`;
@@ -1079,13 +998,11 @@ function makeCardInteractive(card) {
         card.style.top =
           `${currentTop + momentumY}px`;
 
-
         setTimeout(
           () => {
 
             card.style.transition =
               "none";
-
 
             if (
               !card.classList.contains(
@@ -1103,15 +1020,12 @@ function makeCardInteractive(card) {
           700
         );
 
-
         return;
 
       }
 
 
-      /* ---------------------------------------------------
-         + CARD
-      --------------------------------------------------- */
+      /* + CARD */
 
       if (
         card.classList.contains(
@@ -1121,24 +1035,18 @@ function makeCardInteractive(card) {
           "has-image"
         )
       ) {
-
         return;
-
       }
 
 
-      /* ---------------------------------------------------
-         FLIP
-      --------------------------------------------------- */
+      /* FLIP */
 
       card.classList.toggle(
         "flipped"
       );
 
 
-      /* ---------------------------------------------------
-         TEXT SIDE
-      --------------------------------------------------- */
+      /* TEXT SIDE */
 
       if (
         card.classList.contains(
@@ -1155,9 +1063,7 @@ function makeCardInteractive(card) {
       }
 
 
-      /* ---------------------------------------------------
-         PHOTO SIDE
-      --------------------------------------------------- */
+      /* PHOTO SIDE */
 
       else {
 
@@ -1219,11 +1125,8 @@ addCard.addEventListener(
       e.target.tagName === "INPUT" ||
       e.target.tagName === "TEXTAREA"
     ) {
-
       return;
-
     }
-
 
     if (
       !addCard.classList.contains(
@@ -1278,30 +1181,24 @@ customImageInput.addEventListener(
     const file =
       e.target.files[0];
 
-
     if (!file) {
       return;
     }
 
-
     customImageURL =
       URL.createObjectURL(file);
-
 
     const front =
       addCard.querySelector(
         ".add-card-front"
       );
 
-
     front.style.backgroundImage =
       `url("${customImageURL}")`;
-
 
     addCard.classList.add(
       "has-image"
     );
-
 
     setTimeout(
       () => {
@@ -1334,18 +1231,15 @@ function finishCustomCard() {
       "#custom-rule-description"
     );
 
-
   if (!ruleTitleInput) {
     return;
   }
-
 
   const ruleTitle =
     ruleTitleInput.value.trim();
 
   const ruleDescription =
     ruleDescriptionInput.value.trim();
-
 
   if (!ruleTitle) {
 
@@ -1355,10 +1249,8 @@ function finishCustomCard() {
 
   }
 
-
   const plusRect =
     addCard.getBoundingClientRect();
-
 
   const destination =
     getExtremeDestination(
@@ -1368,16 +1260,13 @@ function finishCustomCard() {
       plusRect.height
     );
 
-
   const completedCard =
     document.createElement(
       "div"
     );
 
-
   completedCard.className =
     "card custom-completed-card flipped";
-
 
   completedCard.style.left =
     `${plusRect.left}px`;
@@ -1385,29 +1274,23 @@ function finishCustomCard() {
   completedCard.style.top =
     `${plusRect.top}px`;
 
-
   completedCard.style.width =
     `${plusRect.width}px`;
 
   completedCard.style.height =
     `${plusRect.height}px`;
 
-
   completedCard.style.zIndex =
     "50";
-
 
   completedCard.style.opacity =
     "1";
 
-
   completedCard.style.transform =
     "scale(1.08) rotate(-3deg)";
 
-
   completedCard.style.animation =
     "none";
-
 
   completedCard.innerHTML = `
 
@@ -1422,7 +1305,6 @@ function finishCustomCard() {
           background-repeat: no-repeat;
         "
       ></div>
-
 
       <div class="card-back">
 
@@ -1442,26 +1324,21 @@ function finishCustomCard() {
 
   `;
 
-
   addCard.parentNode.insertBefore(
     completedCard,
     addCard
   );
 
-
   makeCardInteractive(
     completedCard
   );
 
-
   void completedCard.offsetWidth;
-
 
   completedCard.style.transition =
     "transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), " +
     "left 2.2s cubic-bezier(0.16, 1, 0.3, 1), " +
     "top 2.2s cubic-bezier(0.16, 1, 0.3, 1)";
-
 
   completedCard.style.left =
     `${destination.x}px`;
@@ -1472,16 +1349,13 @@ function finishCustomCard() {
   completedCard.style.transform =
     "scale(1) rotate(0deg)";
 
-
   resetAddCard();
-
 
   setTimeout(
     () => {
 
       completedCard.style.transition =
         "none";
-
 
       if (
         completedCard.classList.contains(
@@ -1519,7 +1393,6 @@ function getExtremeDestination(
 
   const screenHeight =
     window.innerHeight;
-
 
   const destinations = [
 
@@ -1598,7 +1471,6 @@ function getExtremeDestination(
 
   ];
 
-
   destinations.forEach(
     (destination) => {
 
@@ -1614,20 +1486,17 @@ function getExtremeDestination(
     }
   );
 
-
   destinations.sort(
     (a, b) =>
       b.distance -
       a.distance
   );
 
-
   const farthest =
     destinations.slice(
       0,
       3
     );
-
 
   const selected =
     farthest[
@@ -1636,7 +1505,6 @@ function getExtremeDestination(
         farthest.length
       )
     ];
-
 
   return {
 
@@ -1661,10 +1529,8 @@ function resetAddCard() {
     "custom-complete"
   );
 
-
   customImageURL =
     null;
-
 
   addCard.querySelector(
     ".card-inner"
@@ -1675,7 +1541,6 @@ function resetAddCard() {
       <span>+</span>
 
     </div>
-
 
     <div class="card-back add-card-back">
 
@@ -1692,7 +1557,6 @@ function resetAddCard() {
 
       </label>
 
-
       <label>
 
         WHY?
@@ -1705,7 +1569,6 @@ function resetAddCard() {
 
       </label>
 
-
       <button
         type="button"
         id="save-custom-card"
@@ -1717,10 +1580,8 @@ function resetAddCard() {
 
   `;
 
-
   customImageInput.value =
     "";
-
 
   addCard.style.transform =
     "none";
@@ -1757,7 +1618,7 @@ function escapeHTML(text) {
 
 
 /* =========================================================
-   IMAGE TRAIL
+   IMAGE TRAIL + MUSIC
 ========================================================= */
 
 let lastImageX = 0;
@@ -1772,8 +1633,19 @@ document.addEventListener(
     if (
       currentMode !== 1
     ) {
+
+      stopTrailSoundCompletely();
+
       return;
+
     }
+
+
+    /* START MUSIC WHILE MOVING */
+
+    startTrailSound();
+
+    stopTrailSound();
 
 
     const now =
