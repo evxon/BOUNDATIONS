@@ -1,876 +1,1989 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+const title = document.querySelector("#title");
+const body = document.body;
+const cards = document.querySelectorAll(".card");
 
-html,
-body {
-  height: 100%;
-  font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
-  overflow: hidden;
-}
-
-body {
-  background: white;
-}
+const imageTrail = document.querySelector("#image-trail");
+const wordTrail = document.querySelector("#word-trail");
+const blackTransition = document.querySelector("#black-transition");
 
 
-/* =========================
-   MAIN LAYOUT
-========================= */
+/* =========================================================
+   MODE
+========================================================= */
 
-.container {
-  display: flex;
-  height: 100vh;
-}
+let currentMode = 1;
+let transitioning = false;
 
 
-/* =========================
-   LEFT SIDE
-========================= */
+/* =========================================================
+   WORD TRAIL
+========================================================= */
 
-.left {
-  width: 50%;
-  height: 100vh;
-
-  position: relative;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  background-image: url('image/임연정-67722.jpg');
-  background-size: cover;
-  background-position: center;
-
-  padding: 20px;
-
-  overflow: hidden;
-
-  cursor: default;
-}
+const trailWords = [
+  "WHAT IF?",
+  "YOUR TURN",
+  "WHY NOT?",
+  "MAKE A FORT",
+  "GET MESSY",
+  "OUR RULE",
+  "TRY AGAIN",
+  "MAKE BELIEVE",
+  "LOOK CLOSER",
+  "PLAY TOGETHER",
+  "CAN WE CHANGE IT?",
+  "WHAT CAN WE MAKE?"
+];
 
 
-/* =========================
-   INTRO TEXT
-========================= */
+/* =========================================================
+   IMAGE TRAIL
+========================================================= */
 
-.left-text {
-  color: white;
-
-  font-size: 1rem;
-  font-weight: 400;
-
-  line-height: 1.4;
-
-  max-width: 80%;
-
-  text-align: center;
-
-  margin-bottom: 20px;
-
-  position: relative;
-
-  z-index: 5;
-
-  opacity: 1;
-
-  transform: translateY(0);
-
-  transition:
-    opacity 0.5s ease,
-    transform 0.5s ease;
-}
+const trailImages = [
+  "image/one.png",
+  "image/two.png",
+  "image/three.png",
+  "image/four.png",
+  "image/five.png",
+  "image/six.png",
+  "image/seven.png",
+  "image/eight.png",
+  "image/nine.png",
+  "image/ten.png",
+  "image/eleven.png",
+  "image/twelve.png",
+  "image/thirteen.png",
+  "image/fourteen.png",
+  "image/fifteen.png",
+  "image/sixteen.png"
+];
 
 
-/* =========================
-   MOUSE TRAIL LAYER
-========================= */
+/* =========================================================
+   CARD POSITIONS
+========================================================= */
 
-#mouseTrailLayer {
+const positions = [
+  [6, 10],
+  [20, 8],
+  [36, 11],
+  [52, 8],
+  [68, 11],
+  [80, 15],
 
-  position: absolute;
+  [5, 37],
+  [18, 51],
 
-  inset: 0;
+  [72, 37],
+  [80, 52],
 
-  width: 100%;
-  height: 100%;
+  [7, 70],
+  [22, 79],
+  [37, 73],
+  [53, 80],
+  [68, 71],
+  [79, 64],
 
-  pointer-events: none;
-
-  overflow: hidden;
-
-  z-index: 20;
-}
+  [84, 82]
+];
 
 
-/* =========================
-   INDIVIDUAL TRAIL
-========================= */
+/* =========================================================
+   SHUFFLE
+========================================================= */
 
-.mouse-trail {
+function shuffle(array) {
 
-  position: absolute;
+  const shuffled = [...array];
 
-  width: 12px;
-  height: 12px;
+  for (
+    let i = shuffled.length - 1;
+    i > 0;
+    i--
+  ) {
 
-  border-radius: 50%;
+    const j =
+      Math.floor(
+        Math.random() * (i + 1)
+      );
 
-  background: rgba(255, 255, 255, 0.9);
+    [
+      shuffled[i],
+      shuffled[j]
+    ] = [
+      shuffled[j],
+      shuffled[i]
+    ];
 
-  pointer-events: none;
+  }
 
-  transform: translate(-50%, -50%);
-
-  animation: trailDisappear 0.7s ease-out forwards;
-
+  return shuffled;
 }
 
 
-/* =========================
-   TRAIL ANIMATION
-========================= */
+/* =========================================================
+   APPLE-STYLE CARD MOVEMENT
+========================================================= */
 
-@keyframes trailDisappear {
+function setCardMovement(card) {
+
+  if (
+    card.classList.contains("add-card")
+  ) {
+
+    card.style.animation = "none";
+
+    return;
+  }
+
+
+  if (
+    card.classList.contains("flipped")
+  ) {
+
+    card.style.animation = "none";
+
+    return;
+  }
+
+
+  const moveX =
+    (
+      Math.random() * 2.8 - 1.4
+    ).toFixed(2);
+
+  const moveY =
+    (
+      Math.random() * 3.8 - 1.9
+    ).toFixed(2);
+
+  const moveR =
+    (
+      Math.random() * 2.4 - 1.2
+    ).toFixed(2);
+
+
+  card.style.setProperty(
+    "--move-x",
+    `${moveX}vw`
+  );
+
+  card.style.setProperty(
+    "--move-y",
+    `${moveY}vh`
+  );
+
+  card.style.setProperty(
+    "--move-r",
+    `${moveR}deg`
+  );
+
+
+  const duration =
+    22 +
+    Math.random() * 16;
+
+
+  const delay =
+    Math.random() * -18;
+
+
+  card.style.animation =
+    "none";
+
+  void card.offsetWidth;
+
+
+  card.style.animation =
+    `appleFloat ${duration}s cubic-bezier(0.45, 0, 0.55, 1) ${delay}s infinite`;
+}
+
+
+/* =========================================================
+   RANDOMIZE ORIGINAL CARDS
+========================================================= */
+
+function randomizeCards() {
+
+  const shuffledPositions =
+    shuffle(positions);
+
+
+  cards.forEach(
+    (card, index) => {
+
+      const [x, y] =
+        shuffledPositions[index];
+
+
+      card.style.setProperty(
+        "--x",
+        `${x}vw`
+      );
+
+      card.style.setProperty(
+        "--y",
+        `${y}vh`
+      );
+
+
+      setCardMovement(card);
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+const styleSheet =
+  document.createElement("style");
+
+styleSheet.textContent = `
+
+
+/* =========================================================
+   APPLE-STYLE FLOAT
+========================================================= */
+
+@keyframes appleFloat {
 
   0% {
 
-    opacity: 0.9;
+    transform:
+      translate(0, 0)
+      rotate(0deg);
 
-    width: 12px;
-    height: 12px;
+  }
+
+  25% {
+
+    transform:
+      translate(
+        calc(var(--move-x) * 0.35),
+        calc(var(--move-y) * 0.25)
+      )
+      rotate(
+        calc(var(--move-r) * 0.3)
+      );
+
+  }
+
+  50% {
+
+    transform:
+      translate(
+        var(--move-x),
+        var(--move-y)
+      )
+      rotate(
+        var(--move-r)
+      );
+
+  }
+
+  75% {
+
+    transform:
+      translate(
+        calc(var(--move-x) * 0.55),
+        calc(var(--move-y) * 0.8)
+      )
+      rotate(
+        calc(var(--move-r) * 0.5)
+      );
 
   }
 
   100% {
 
-    opacity: 0;
-
-    width: 2px;
-    height: 2px;
-
-  }
-
-}
-
-
-/* =========================
-   RIGHT SIDE
-========================= */
-
-.right {
-
-  width: 50%;
-  height: 100vh;
-
-  background-color: white;
-
-  display: flex;
-
-  flex-direction: column;
-
-  justify-content: flex-start;
-
-  align-items: flex-end;
-
-  padding: 50px 30px;
-
-  position: relative;
-}
-
-
-/* =========================
-   MAIN MENU
-========================= */
-
-.menu {
-
-  list-style: none;
-
-  font-size: 0.9rem;
-
-  letter-spacing: 2px;
-
-  font-weight: 400;
-
-  text-align: right;
-
-  z-index: 2;
-
-  position: relative;
-}
-
-.menu li {
-
-  margin: 12px 0;
-
-  cursor: pointer;
-
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease,
-    color 0.18s ease;
-}
-
-.menu li:hover {
-
-  opacity: 0.55;
-
-  transform: translateX(-5px);
-}
-
-
-/* =========================
-   SUBMENUS
-========================= */
-
-.web-list,
-.photo-list,
-.design-list,
-.film-list {
-
-  list-style: none;
-
-  font-size: 0.95rem;
-
-  margin-top: 10px;
-
-  display: none;
-
-  position: relative;
-
-  z-index: 2;
-}
-
-
-.menu-open {
-
-  animation:
-    menuFadeIn 0.18s ease forwards;
-}
-
-
-@keyframes menuFadeIn {
-
-  from {
-
-    opacity: 0;
-
-    transform: translateY(-18px);
+    transform:
+      translate(0, 0)
+      rotate(0deg);
 
   }
 
-  to {
+}
+
+
+/* =========================================================
+   TITLE → BLACK
+========================================================= */
+
+@keyframes titleToBlack {
+
+  0% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(1);
 
     opacity: 1;
 
-    transform: translateY(0);
-
   }
 
-}
+  18% {
 
-
-/* =========================
-   SUBMENU ITEMS
-========================= */
-
-.web-list li,
-.photo-list li,
-.design-list li,
-.film-list li {
-
-  margin: 8px 0;
-
-  cursor: pointer;
-
-  color: #333;
-
-  opacity: 0;
-
-  animation:
-    itemFadeIn 0.18s ease forwards;
-
-  transition:
-    color 0.15s ease,
-    opacity 0.15s ease,
-    transform 0.15s ease;
-}
-
-
-.web-list li:nth-child(1),
-.photo-list li:nth-child(1),
-.design-list li:nth-child(1),
-.film-list li:nth-child(1) {
-
-  animation-delay: 0.02s;
-}
-
-
-.web-list li:nth-child(2),
-.photo-list li:nth-child(2),
-.design-list li:nth-child(2),
-.film-list li:nth-child(2) {
-
-  animation-delay: 0.045s;
-}
-
-
-.web-list li:nth-child(3),
-.photo-list li:nth-child(3),
-.design-list li:nth-child(3),
-.film-list li:nth-child(3) {
-
-  animation-delay: 0.07s;
-}
-
-
-.web-list li:nth-child(4),
-.photo-list li:nth-child(4),
-.design-list li:nth-child(4),
-.film-list li:nth-child(4) {
-
-  animation-delay: 0.095s;
-}
-
-
-.web-list li:nth-child(5),
-.photo-list li:nth-child(5),
-.design-list li:nth-child(5),
-.film-list li:nth-child(5) {
-
-  animation-delay: 0.12s;
-}
-
-
-.web-list li:nth-child(6),
-.photo-list li:nth-child(6),
-.design-list li:nth-child(6),
-.film-list li:nth-child(6) {
-
-  animation-delay: 0.145s;
-}
-
-
-.web-list li:nth-child(7),
-.photo-list li:nth-child(7),
-.design-list li:nth-child(7),
-.film-list li:nth-child(7) {
-
-  animation-delay: 0.17s;
-}
-
-
-.web-list li:nth-child(8),
-.photo-list li:nth-child(8),
-.design-list li:nth-child(8),
-.film-list li:nth-child(8) {
-
-  animation-delay: 0.195s;
-}
-
-
-.web-list li:nth-child(9),
-.photo-list li:nth-child(9),
-.design-list li:nth-child(9),
-.film-list li:nth-child(9) {
-
-  animation-delay: 0.22s;
-}
-
-
-@keyframes itemFadeIn {
-
-  from {
-
-    opacity: 0;
-
-    transform: translateY(-25px);
-
-  }
-
-  to {
+    transform:
+      translate(-50%, -50%)
+      scale(0.86);
 
     opacity: 1;
 
-    transform: translateY(0);
-
   }
 
-}
+  36% {
 
-
-/* =========================
-   SUBMENU HOVER
-========================= */
-
-.web-list li:hover,
-.photo-list li:hover,
-.design-list li:hover,
-.film-list li:hover {
-
-  color: #555;
-
-  text-decoration: underline;
-
-  transform: translateX(-5px);
-}
-
-
-/* =========================
-   VIDEO
-========================= */
-
-.video-overlay {
-
-  width: 100%;
-
-  opacity: 0;
-
-  transform: translateY(8px);
-
-  animation:
-    contentFadeIn 0.55s ease forwards;
-}
-
-
-.video-overlay video {
-
-  width: 100%;
-
-  height: auto;
-
-  display: block;
-}
-
-
-.video-container {
-
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: flex-start;
-
-  justify-content: center;
-
-  opacity: 0;
-
-  transform: translateY(8px);
-
-  animation:
-    contentFadeIn 0.5s ease forwards;
-}
-
-
-.video-year {
-
-  font-weight: 400;
-
-  font-size: 0.85rem;
-
-  font-style: italic;
-
-  margin-top: 10px;
-
-  color: gray;
-}
-
-
-.video-description {
-
-  color: gray;
-
-  font-size: 0.85rem;
-
-  margin-top: 5px;
-
-  text-align: left;
-
-  max-width: 80%;
-}
-
-
-.video-grid-vertical {
-
-  display: flex;
-
-  flex-direction: column;
-
-  width: 100%;
-
-  gap: 10px;
-
-  align-items: center;
-}
-
-
-.video-grid-vertical video {
-
-  width: 90%;
-
-  height: auto;
-
-  object-fit: contain;
-}
-
-
-/* =========================
-   CONTENT ANIMATION
-========================= */
-
-@keyframes contentFadeIn {
-
-  from {
-
-    opacity: 0;
-
-    transform: translateY(8px);
-
-  }
-
-  to {
+    transform:
+      translate(-50%, -50%)
+      scale(0.35);
 
     opacity: 1;
 
-    transform: translateY(0);
+  }
+
+  48% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.055);
+
+    opacity: 1;
+
+  }
+
+  58% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.08);
+
+    opacity: 1;
+
+  }
+
+  72% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(1.1);
+
+    opacity: 1;
+
+  }
+
+  88% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(5);
+
+    opacity: 0.65;
+
+  }
+
+  100% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(16);
+
+    opacity: 0;
 
   }
 
 }
 
 
-.left > img,
-.left > .split-left {
+/* =========================================================
+   BLACK SCREEN REVEAL
 
-  animation:
-    contentFadeIn 0.55s ease forwards;
+   VERY SMOOTH CENTER EXPANSION
+
+   The circle no longer jumps through
+   multiple noticeable stages.
+========================================================= */
+
+@keyframes blackReveal {
+
+  0% {
+
+    clip-path:
+      circle(0% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  20% {
+
+    clip-path:
+      circle(0.15% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  40% {
+
+    clip-path:
+      circle(1.5% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  60% {
+
+    clip-path:
+      circle(12% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  78% {
+
+    clip-path:
+      circle(45% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  90% {
+
+    clip-path:
+      circle(90% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  100% {
+
+    clip-path:
+      circle(160% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
 }
 
 
-/* =========================
-   EVON BUTTON
-========================= */
+/* =========================================================
+   BLACK → TITLE
+========================================================= */
 
-.evon-toggle {
+@keyframes blackToTitle {
 
-  position: fixed;
+  0% {
 
-  top: 20px;
+    clip-path:
+      circle(160% at 50% 50%);
 
-  left: 20px;
+  }
 
-  font-size: 1.2rem;
+  25% {
 
-  font-weight: 500;
+    clip-path:
+      circle(80% at 50% 50%);
 
-  color: black;
+  }
 
-  cursor: pointer;
+  50% {
 
-  z-index: 100;
+    clip-path:
+      circle(35% at 50% 50%);
 
-  background: none;
+  }
 
-  padding: 0;
+  68% {
 
-  border: none;
+    clip-path:
+      circle(8% at 50% 50%);
 
-  font-family:
-    "Inter",
-    "Helvetica Neue",
-    Arial,
-    sans-serif;
+  }
 
-  display: none;
+  78% {
 
-  opacity: 0.8;
+    clip-path:
+      circle(1% at 50% 50%);
 
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease;
+  }
+
+  100% {
+
+    clip-path:
+      circle(0% at 50% 50%);
+
+  }
+
 }
 
 
-.evon-toggle:hover {
+/* =========================================================
+   TITLE REAPPEAR
+========================================================= */
 
-  opacity: 1;
+@keyframes titleAppear {
 
-  transform: translateX(4px);
+  0% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.055);
+
+    opacity: 0;
+
+  }
+
+  20% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.055);
+
+    opacity: 1;
+
+  }
+
+  45% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.15);
+
+    opacity: 1;
+
+  }
+
+  70% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.72);
+
+    opacity: 1;
+
+  }
+
+  100% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(1);
+
+    opacity: 1;
+
+  }
+
+}
+
+`;
+
+document.head.appendChild(
+  styleSheet
+);
+
+
+/* =========================================================
+   INITIAL RANDOMIZATION
+========================================================= */
+
+randomizeCards();
+
+
+/* =========================================================
+   CARD → BLACK TRANSITION
+========================================================= */
+
+function enterBlackScreen() {
+
+  if (transitioning) {
+    return;
+  }
+
+
+  transitioning = true;
+
+
+  /*
+    Keep the cards underneath
+    while the black circle begins.
+  */
+
+  body.className =
+    "black-transition";
+
+
+  /*
+    Title movement.
+  */
+
+  title.style.animation =
+    "titleToBlack 2.15s cubic-bezier(0.16, 1, 0.3, 1) forwards";
+
+
+  /*
+    Smooth black circle.
+
+    Using a single smooth easing curve
+    instead of the default stepped feeling.
+  */
+
+  blackTransition.style.animation =
+    "blackReveal 2.15s cubic-bezier(0.16, 1, 0.3, 1) forwards";
+
+
+  /*
+    Only remove everything after
+    the animation has completely finished.
+  */
+
+  setTimeout(
+    () => {
+
+      body.className =
+        "black-mode";
+
+      currentMode = 4;
+
+      title.style.animation =
+        "none";
+
+      blackTransition.style.animation =
+        "none";
+
+      transitioning = false;
+
+    },
+    2200
+  );
+
 }
 
 
-/* =========================
-   VIDEO SPLIT
-========================= */
+/* =========================================================
+   TITLE CLICK
+========================================================= */
 
-.video-split {
+title.addEventListener(
+  "click",
+  () => {
 
-  position: fixed;
+    if (transitioning) {
+      return;
+    }
 
-  top: 50%;
 
-  left: 40%;
+    /* -----------------------------------------------------
+       CARD → BLACK
+    ----------------------------------------------------- */
 
-  transform:
-    translate(-50%, -50%);
+    if (currentMode === 3) {
 
-  width: 45vw;
+      enterBlackScreen();
 
-  display: none;
+      return;
+    }
 
-  flex-direction: column;
 
-  justify-content: center;
+    /* -----------------------------------------------------
+       IMAGE → WORD
+    ----------------------------------------------------- */
 
-  align-items: center;
+    if (currentMode === 1) {
 
-  gap: 2vh;
+      currentMode = 2;
 
-  z-index: 9999;
+      body.className =
+        "word-mode";
 
-  animation:
-    contentFadeIn 0.5s ease forwards;
+      return;
+    }
+
+
+    /* -----------------------------------------------------
+       WORD → CARDS
+    ----------------------------------------------------- */
+
+    if (currentMode === 2) {
+
+      currentMode = 3;
+
+      body.className =
+        "card-mode";
+
+      return;
+    }
+
+  }
+);
+
+
+/* =========================================================
+   BLACK SCREEN → IMAGE
+========================================================= */
+
+blackTransition.addEventListener(
+  "click",
+  () => {
+
+    if (
+      currentMode !== 4 ||
+      transitioning
+    ) {
+      return;
+    }
+
+
+    transitioning = true;
+
+
+    body.className =
+      "black-transition";
+
+
+    title.style.display =
+      "block";
+
+    title.style.opacity =
+      "0";
+
+    title.style.transform =
+      "translate(-50%, -50%) scale(0.055)";
+
+
+    blackTransition.style.animation =
+      "blackToTitle 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards";
+
+
+    title.style.animation =
+      "titleAppear 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards";
+
+
+    setTimeout(
+      () => {
+
+        body.className =
+          "image-mode";
+
+        currentMode = 1;
+
+
+        blackTransition.style.animation =
+          "none";
+
+        blackTransition.style.opacity =
+          "0";
+
+
+        title.style.animation =
+          "none";
+
+        title.style.transform =
+          "translate(-50%, -50%) scale(1)";
+
+        title.style.opacity =
+          "1";
+
+        title.style.display =
+          "";
+
+
+        transitioning = false;
+
+      },
+      1850
+    );
+
+  }
+);
+
+
+/* =========================================================
+   CARD DRAG + FLIP
+========================================================= */
+
+function makeCardInteractive(card) {
+
+  let startX = 0;
+  let startY = 0;
+
+  let originalLeft = 0;
+  let originalTop = 0;
+
+  let moved = false;
+
+  let lastPointerX = 0;
+  let lastPointerY = 0;
+
+  let velocityX = 0;
+  let velocityY = 0;
+
+  let lastMoveTime = 0;
+
+
+  /* -------------------------------------------------------
+     POINTER DOWN
+  ------------------------------------------------------- */
+
+  card.addEventListener(
+    "pointerdown",
+    (e) => {
+
+      if (
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA" ||
+        e.target.tagName === "BUTTON"
+      ) {
+
+        return;
+
+      }
+
+
+      const rect =
+        card.getBoundingClientRect();
+
+
+      startX =
+        e.clientX;
+
+      startY =
+        e.clientY;
+
+
+      originalLeft =
+        rect.left;
+
+      originalTop =
+        rect.top;
+
+
+      lastPointerX =
+        e.clientX;
+
+      lastPointerY =
+        e.clientY;
+
+
+      velocityX = 0;
+      velocityY = 0;
+
+
+      lastMoveTime =
+        performance.now();
+
+
+      moved = false;
+
+
+      card.style.animation =
+        "none";
+
+
+      card.style.left =
+        `${originalLeft}px`;
+
+      card.style.top =
+        `${originalTop}px`;
+
+
+      card.style.transform =
+        "none";
+
+
+      card.style.transition =
+        "none";
+
+
+      card.setPointerCapture(
+        e.pointerId
+      );
+
+
+      card.classList.add(
+        "dragging"
+      );
+
+    }
+  );
+
+
+  /* -------------------------------------------------------
+     POINTER MOVE
+  ------------------------------------------------------- */
+
+  card.addEventListener(
+    "pointermove",
+    (e) => {
+
+      if (
+        !card.hasPointerCapture(
+          e.pointerId
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      const now =
+        performance.now();
+
+
+      const dx =
+        e.clientX -
+        startX;
+
+      const dy =
+        e.clientY -
+        startY;
+
+
+      const deltaTime =
+        Math.max(
+          now - lastMoveTime,
+          1
+        );
+
+
+      velocityX =
+        (
+          e.clientX -
+          lastPointerX
+        ) /
+        deltaTime;
+
+
+      velocityY =
+        (
+          e.clientY -
+          lastPointerY
+        ) /
+        deltaTime;
+
+
+      lastPointerX =
+        e.clientX;
+
+      lastPointerY =
+        e.clientY;
+
+      lastMoveTime =
+        now;
+
+
+      if (
+        Math.abs(dx) > 5 ||
+        Math.abs(dy) > 5
+      ) {
+
+        moved = true;
+
+      }
+
+
+      card.style.left =
+        `${originalLeft + dx}px`;
+
+      card.style.top =
+        `${originalTop + dy}px`;
+
+    }
+  );
+
+
+  /* -------------------------------------------------------
+     POINTER UP
+  ------------------------------------------------------- */
+
+  card.addEventListener(
+    "pointerup",
+    (e) => {
+
+      if (
+        !card.hasPointerCapture(
+          e.pointerId
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      card.releasePointerCapture(
+        e.pointerId
+      );
+
+
+      card.classList.remove(
+        "dragging"
+      );
+
+
+      /* ---------------------------------------------------
+         DRAGGED
+      --------------------------------------------------- */
+
+      if (moved) {
+
+        const momentumX =
+          Math.max(
+            -45,
+            Math.min(
+              45,
+              velocityX * 90
+            )
+          );
+
+
+        const momentumY =
+          Math.max(
+            -45,
+            Math.min(
+              45,
+              velocityY * 90
+            )
+          );
+
+
+        const currentLeft =
+          parseFloat(
+            card.style.left
+          );
+
+
+        const currentTop =
+          parseFloat(
+            card.style.top
+          );
+
+
+        card.style.transition =
+          "left 0.65s cubic-bezier(0.16, 1, 0.3, 1), " +
+          "top 0.65s cubic-bezier(0.16, 1, 0.3, 1)";
+
+
+        card.style.left =
+          `${currentLeft + momentumX}px`;
+
+        card.style.top =
+          `${currentTop + momentumY}px`;
+
+
+        setTimeout(
+          () => {
+
+            card.style.transition =
+              "none";
+
+
+            if (
+              !card.classList.contains(
+                "flipped"
+              )
+            ) {
+
+              setCardMovement(
+                card
+              );
+
+            }
+
+          },
+          700
+        );
+
+
+        return;
+
+      }
+
+
+      /* ---------------------------------------------------
+         + CARD
+      --------------------------------------------------- */
+
+      if (
+        card.classList.contains(
+          "add-card"
+        ) &&
+        !card.classList.contains(
+          "has-image"
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      /* ---------------------------------------------------
+         FLIP
+      --------------------------------------------------- */
+
+      card.classList.toggle(
+        "flipped"
+      );
+
+
+      /* ---------------------------------------------------
+         TEXT SIDE
+      --------------------------------------------------- */
+
+      if (
+        card.classList.contains(
+          "flipped"
+        )
+      ) {
+
+        card.style.animation =
+          "none";
+
+        card.style.transition =
+          "none";
+
+      }
+
+
+      /* ---------------------------------------------------
+         PHOTO SIDE
+      --------------------------------------------------- */
+
+      else {
+
+        setTimeout(
+          () => {
+
+            setCardMovement(
+              card
+            );
+
+          },
+          50
+        );
+
+      }
+
+    }
+  );
+
 }
 
 
-.video-split video {
+/* =========================================================
+   INITIAL CARD INTERACTION
+========================================================= */
 
-  width: 100%;
+cards.forEach(
+  makeCardInteractive
+);
 
-  height: auto;
 
-  max-height: 45vh;
+/* =========================================================
+   CUSTOM CARD SYSTEM
+========================================================= */
+
+const addCard =
+  document.querySelector(
+    ".add-card"
+  );
+
+const customImageInput =
+  document.querySelector(
+    "#custom-image-input"
+  );
+
+let customImageURL = null;
+
+
+/* =========================================================
+   CLICK +
+========================================================= */
+
+addCard.addEventListener(
+  "click",
+  (e) => {
+
+    if (
+      e.target.tagName === "BUTTON" ||
+      e.target.tagName === "INPUT" ||
+      e.target.tagName === "TEXTAREA"
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      !addCard.classList.contains(
+        "flipped"
+      ) &&
+      !addCard.classList.contains(
+        "has-image"
+      )
+    ) {
+
+      customImageInput.click();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   ADD RULE BUTTON
+========================================================= */
+
+addCard.addEventListener(
+  "click",
+  (e) => {
+
+    if (
+      e.target.id ===
+      "save-custom-card"
+    ) {
+
+      e.preventDefault();
+
+      e.stopPropagation();
+
+      finishCustomCard();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   IMAGE UPLOAD
+========================================================= */
+
+customImageInput.addEventListener(
+  "change",
+  (e) => {
+
+    const file =
+      e.target.files[0];
+
+
+    if (!file) {
+      return;
+    }
+
+
+    customImageURL =
+      URL.createObjectURL(file);
+
+
+    const front =
+      addCard.querySelector(
+        ".add-card-front"
+      );
+
+
+    front.style.backgroundImage =
+      `url("${customImageURL}")`;
+
+
+    addCard.classList.add(
+      "has-image"
+    );
+
+
+    setTimeout(
+      () => {
+
+        addCard.classList.add(
+          "flipped"
+        );
+
+      },
+      100
+    );
+
+  }
+);
+
+
+/* =========================================================
+   FINISH CUSTOM CARD
+========================================================= */
+
+function finishCustomCard() {
+
+  const ruleTitleInput =
+    addCard.querySelector(
+      "#custom-rule-title"
+    );
+
+  const ruleDescriptionInput =
+    addCard.querySelector(
+      "#custom-rule-description"
+    );
+
+
+  if (!ruleTitleInput) {
+    return;
+  }
+
+
+  const ruleTitle =
+    ruleTitleInput.value.trim();
+
+  const ruleDescription =
+    ruleDescriptionInput.value.trim();
+
+
+  if (!ruleTitle) {
+
+    ruleTitleInput.focus();
+
+    return;
+
+  }
+
+
+  const plusRect =
+    addCard.getBoundingClientRect();
+
+
+  const destination =
+    getExtremeDestination(
+      plusRect.left,
+      plusRect.top,
+      plusRect.width,
+      plusRect.height
+    );
+
+
+  const completedCard =
+    document.createElement(
+      "div"
+    );
+
+
+  completedCard.className =
+    "card custom-completed-card flipped";
+
+
+  completedCard.style.left =
+    `${plusRect.left}px`;
+
+  completedCard.style.top =
+    `${plusRect.top}px`;
+
+
+  completedCard.style.width =
+    `${plusRect.width}px`;
+
+  completedCard.style.height =
+    `${plusRect.height}px`;
+
+
+  completedCard.style.zIndex =
+    "50";
+
+
+  completedCard.style.opacity =
+    "1";
+
+
+  completedCard.style.transform =
+    "scale(1.08) rotate(-3deg)";
+
+
+  completedCard.style.animation =
+    "none";
+
+
+  completedCard.innerHTML = `
+
+    <div class="card-inner">
+
+      <div
+        class="card-front"
+        style="
+          background-image: url('${customImageURL}');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+        "
+      ></div>
+
+
+      <div class="card-back">
+
+        <span>YOUR RULE</span>
+
+        <h2>
+          ${escapeHTML(ruleTitle)}
+        </h2>
+
+        <p>
+          ${escapeHTML(ruleDescription)}
+        </p>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  addCard.parentNode.insertBefore(
+    completedCard,
+    addCard
+  );
+
+
+  makeCardInteractive(
+    completedCard
+  );
+
+
+  void completedCard.offsetWidth;
+
+
+  completedCard.style.transition =
+    "transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), " +
+    "left 2.2s cubic-bezier(0.16, 1, 0.3, 1), " +
+    "top 2.2s cubic-bezier(0.16, 1, 0.3, 1)";
+
+
+  completedCard.style.left =
+    `${destination.x}px`;
+
+  completedCard.style.top =
+    `${destination.y}px`;
+
+  completedCard.style.transform =
+    "scale(1) rotate(0deg)";
+
+
+  resetAddCard();
+
+
+  setTimeout(
+    () => {
+
+      completedCard.style.transition =
+        "none";
+
+
+      if (
+        completedCard.classList.contains(
+          "flipped"
+        )
+      ) {
+
+        completedCard.style.animation =
+          "none";
+
+      }
+
+    },
+    2300
+  );
+
 }
 
 
-.split-left {
+/* =========================================================
+   EXTREME DESTINATION
+========================================================= */
 
-  display: flex;
+function getExtremeDestination(
+  startX,
+  startY,
+  cardWidth,
+  cardHeight
+) {
 
-  flex-direction: column;
+  const margin = 30;
 
-  height: 100%;
+  const screenWidth =
+    window.innerWidth;
+
+  const screenHeight =
+    window.innerHeight;
+
+
+  const destinations = [
+
+    {
+      x: margin,
+      y: margin
+    },
+
+    {
+      x:
+        (screenWidth -
+          cardWidth) / 2,
+
+      y: margin
+    },
+
+    {
+      x:
+        screenWidth -
+        cardWidth -
+        margin,
+
+      y: margin
+    },
+
+    {
+      x: margin,
+
+      y:
+        (screenHeight -
+          cardHeight) / 2
+    },
+
+    {
+      x:
+        screenWidth -
+        cardWidth -
+        margin,
+
+      y:
+        (screenHeight -
+          cardHeight) / 2
+    },
+
+    {
+      x: margin,
+
+      y:
+        screenHeight -
+        cardHeight -
+        margin
+    },
+
+    {
+      x:
+        (screenWidth -
+          cardWidth) / 2,
+
+      y:
+        screenHeight -
+        cardHeight -
+        margin
+    },
+
+    {
+      x:
+        screenWidth -
+        cardWidth -
+        margin,
+
+      y:
+        screenHeight -
+        cardHeight -
+        margin
+    }
+
+  ];
+
+
+  destinations.forEach(
+    (destination) => {
+
+      destination.distance =
+        Math.hypot(
+          destination.x -
+            startX,
+
+          destination.y -
+            startY
+        );
+
+    }
+  );
+
+
+  destinations.sort(
+    (a, b) =>
+      b.distance -
+      a.distance
+  );
+
+
+  const farthest =
+    destinations.slice(
+      0,
+      3
+    );
+
+
+  const selected =
+    farthest[
+      Math.floor(
+        Math.random() *
+        farthest.length
+      )
+    ];
+
+
+  return {
+
+    x: selected.x,
+
+    y: selected.y
+
+  };
+
 }
 
 
-.split-left .top,
-.split-left .bottom {
+/* =========================================================
+   RESET + CARD
+========================================================= */
 
-  width: 100%;
+function resetAddCard() {
 
-  height: 50%;
+  addCard.classList.remove(
+    "flipped",
+    "has-image",
+    "custom-complete"
+  );
 
-  background-size: cover;
 
-  background-position: center;
+  customImageURL =
+    null;
 
-  background-repeat: no-repeat;
+
+  addCard.querySelector(
+    ".card-inner"
+  ).innerHTML = `
+
+    <div class="card-front add-card-front">
+
+      <span>+</span>
+
+    </div>
+
+
+    <div class="card-back add-card-back">
+
+      <label>
+
+        RULE
+
+        <input
+          type="text"
+          id="custom-rule-title"
+          placeholder="Write your rule..."
+          maxlength="60"
+        >
+
+      </label>
+
+
+      <label>
+
+        WHY?
+
+        <textarea
+          id="custom-rule-description"
+          placeholder="What does this rule mean?"
+          maxlength="180"
+        ></textarea>
+
+      </label>
+
+
+      <button
+        type="button"
+        id="save-custom-card"
+      >
+        ADD RULE
+      </button>
+
+    </div>
+
+  `;
+
+
+  customImageInput.value =
+    "";
+
+
+  addCard.style.transform =
+    "none";
+
+  addCard.style.animation =
+    "none";
+
+  addCard.style.transition =
+    "none";
+
+  addCard.style.zIndex =
+    "10";
+
 }
 
 
-iframe {
+/* =========================================================
+   SAFE TEXT
+========================================================= */
 
-  width: 100%;
+function escapeHTML(text) {
 
-  height: 90vh;
+  const div =
+    document.createElement(
+      "div"
+    );
 
-  border: none;
+  div.textContent =
+    text;
+
+  return div.innerHTML;
+
 }
 
 
-/* =========================
-   HALLEY
-========================= */
+/* =========================================================
+   IMAGE TRAIL
+========================================================= */
 
-.halley-year {
+let lastImageX = 0;
+let lastImageY = 0;
+let lastImageTime = 0;
 
-  color: gray;
 
-  font-size: 0.85rem;
+document.addEventListener(
+  "mousemove",
+  (e) => {
 
-  font-style: italic;
+    if (
+      currentMode !== 1
+    ) {
+      return;
+    }
 
-  position: absolute;
 
-  bottom: 0;
+    const now =
+      Date.now();
 
-  right: 100px;
 
-  z-index: 30;
+    if (
+      now - lastImageTime <
+      80
+    ) {
+      return;
+    }
 
-  background:
-    rgba(255, 255, 255, 0);
 
-  padding: 2px 5px;
+    const distance =
+      Math.hypot(
+        e.clientX -
+          lastImageX,
 
-  animation:
-    contentFadeIn 0.5s ease forwards;
-}
+        e.clientY -
+          lastImageY
+      );
 
 
-.schedule-desc {
+    if (
+      distance < 15
+    ) {
+      return;
+    }
 
-  color: rgb(251, 251, 251);
 
-  font-size: 0.68rem;
+    lastImageX =
+      e.clientX;
 
-  position: absolute;
+    lastImageY =
+      e.clientY;
 
-  bottom: 485px;
+    lastImageTime =
+      now;
 
-  right: 420px;
 
-  transform:
-    translateY(-50%);
+    const img =
+      document.createElement(
+        "img"
+      );
 
-  max-width: 220px;
 
-  text-align: left;
+    const randomImage =
+      trailImages[
+        Math.floor(
+          Math.random() *
+          trailImages.length
+        )
+      ];
 
-  line-height: 1.4;
 
-  animation:
-    contentFadeIn 0.55s ease forwards;
-}
+    img.src =
+      randomImage;
 
+    img.className =
+      "trail-image";
 
-/* =========================
-   ROOM 1305
-========================= */
 
-.room1305-info {
+    img.style.left =
+      `${e.clientX}px`;
 
-  position: absolute;
+    img.style.top =
+      `${e.clientY}px`;
 
-  top: 10%;
 
-  right: 65%;
+    img.style.transform =
+      `translate(-50%, -50%)
+       rotate(${Math.random() * 20 - 10}deg)`;
 
-  max-width: 40%;
 
-  animation:
-    contentFadeIn 0.5s ease forwards;
-}
+    imageTrail.appendChild(
+      img
+    );
 
 
-.room1305-info .video-year,
-.room1305-info .video-description {
+    setTimeout(
+      () => {
 
-  text-align: right;
-}
+        img.remove();
 
+      },
+      1500
+    );
 
-/* =========================
-   POLO
-========================= */
+  }
+);
 
-.next-button {
 
-  margin-top: 5px;
+/* =========================================================
+   WORD TRAIL
+========================================================= */
 
-  font-size: 1.2rem;
+let lastWordX = 0;
+let lastWordY = 0;
+let lastWordTime = 0;
 
-  cursor: pointer;
 
-  background: none;
+document.addEventListener(
+  "mousemove",
+  (e) => {
 
-  border: none;
+    if (
+      currentMode !== 2
+    ) {
+      return;
+    }
 
-  color: black;
 
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease;
-}
+    const now =
+      Date.now();
 
 
-.next-button:hover {
+    if (
+      now - lastWordTime <
+      90
+    ) {
+      return;
+    }
 
-  opacity: 0.5;
 
-  transform: translateX(5px);
-}
+    const distance =
+      Math.hypot(
+        e.clientX -
+          lastWordX,
 
+        e.clientY -
+          lastWordY
+      );
 
-.iblame-year {
 
-  font-size: 0.85rem;
+    if (
+      distance < 18
+    ) {
+      return;
+    }
 
-  font-style: italic;
 
-  color: gray;
+    lastWordX =
+      e.clientX;
 
-  margin-bottom: 5px;
-}
+    lastWordY =
+      e.clientY;
 
+    lastWordTime =
+      now;
 
-.iblame-desc {
 
-  color: gray;
+    const word =
+      document.createElement(
+        "span"
+      );
 
-  font-size: 0.85rem;
 
-  margin-top: 5px;
+    word.className =
+      "trail-word";
 
-  max-width: 80%;
-}
 
+    word.textContent =
+      trailWords[
+        Math.floor(
+          Math.random() *
+          trailWords.length
+        )
+      ];
 
-/* =========================
-   CHAIROSCOPE
-========================= */
 
-.chai-desc {
+    word.style.left =
+      `${e.clientX}px`;
 
-  color: gray;
+    word.style.top =
+      `${e.clientY}px`;
 
-  font-size: 0.85rem;
 
-  margin-top: 20px;
+    const randomSize =
+      Math.floor(
+        Math.random() * 9
+      ) + 15;
 
-  max-width: 80%;
-}
 
+    const randomRotation =
+      Math.random() * 10 - 5;
 
-.chai-year {
 
-  font-size: 0.85rem;
+    word.style.fontSize =
+      `${randomSize}px`;
 
-  font-style: italic;
 
-  color: gray;
+    word.style.transform =
+      `translate(-50%, -50%)
+       rotate(${randomRotation}deg)`;
 
-  margin-top: 10px;
-}
 
+    wordTrail.appendChild(
+      word
+    );
 
-/* =========================
-   BAD DRIVERS
-========================= */
 
-.baddrivers-year {
+    setTimeout(
+      () => {
 
-  font-size: 0.85rem;
+        word.remove();
 
-  font-style: italic;
+      },
+      1400
+    );
 
-  color: gray;
-
-  margin-bottom: 5px;
-}
-
-
-.baddrivers-desc {
-
-  color: gray;
-
-  font-size: 0.85rem;
-
-  margin-top: 5px;
-
-  max-width: 80%;
-}
+  }
+);
