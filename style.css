@@ -1,0 +1,876 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden;
+}
+
+body {
+  background: white;
+}
+
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+
+/* =========================
+   LEFT SIDE
+========================= */
+
+.left {
+  width: 50%;
+  height: 100vh;
+
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background-image: url('image/임연정-67722.jpg');
+  background-size: cover;
+  background-position: center;
+
+  padding: 20px;
+
+  overflow: hidden;
+
+  cursor: default;
+}
+
+
+/* =========================
+   INTRO TEXT
+========================= */
+
+.left-text {
+  color: white;
+
+  font-size: 1rem;
+  font-weight: 400;
+
+  line-height: 1.4;
+
+  max-width: 80%;
+
+  text-align: center;
+
+  margin-bottom: 20px;
+
+  position: relative;
+
+  z-index: 5;
+
+  opacity: 1;
+
+  transform: translateY(0);
+
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+
+
+/* =========================
+   MOUSE TRAIL LAYER
+========================= */
+
+#mouseTrailLayer {
+
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  pointer-events: none;
+
+  overflow: hidden;
+
+  z-index: 20;
+}
+
+
+/* =========================
+   INDIVIDUAL TRAIL
+========================= */
+
+.mouse-trail {
+
+  position: absolute;
+
+  width: 12px;
+  height: 12px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  pointer-events: none;
+
+  transform: translate(-50%, -50%);
+
+  animation: trailDisappear 0.7s ease-out forwards;
+
+}
+
+
+/* =========================
+   TRAIL ANIMATION
+========================= */
+
+@keyframes trailDisappear {
+
+  0% {
+
+    opacity: 0.9;
+
+    width: 12px;
+    height: 12px;
+
+  }
+
+  100% {
+
+    opacity: 0;
+
+    width: 2px;
+    height: 2px;
+
+  }
+
+}
+
+
+/* =========================
+   RIGHT SIDE
+========================= */
+
+.right {
+
+  width: 50%;
+  height: 100vh;
+
+  background-color: white;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: flex-start;
+
+  align-items: flex-end;
+
+  padding: 50px 30px;
+
+  position: relative;
+}
+
+
+/* =========================
+   MAIN MENU
+========================= */
+
+.menu {
+
+  list-style: none;
+
+  font-size: 0.9rem;
+
+  letter-spacing: 2px;
+
+  font-weight: 400;
+
+  text-align: right;
+
+  z-index: 2;
+
+  position: relative;
+}
+
+.menu li {
+
+  margin: 12px 0;
+
+  cursor: pointer;
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    color 0.18s ease;
+}
+
+.menu li:hover {
+
+  opacity: 0.55;
+
+  transform: translateX(-5px);
+}
+
+
+/* =========================
+   SUBMENUS
+========================= */
+
+.web-list,
+.photo-list,
+.design-list,
+.film-list {
+
+  list-style: none;
+
+  font-size: 0.95rem;
+
+  margin-top: 10px;
+
+  display: none;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+
+.menu-open {
+
+  animation:
+    menuFadeIn 0.18s ease forwards;
+}
+
+
+@keyframes menuFadeIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateY(-18px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateY(0);
+
+  }
+
+}
+
+
+/* =========================
+   SUBMENU ITEMS
+========================= */
+
+.web-list li,
+.photo-list li,
+.design-list li,
+.film-list li {
+
+  margin: 8px 0;
+
+  cursor: pointer;
+
+  color: #333;
+
+  opacity: 0;
+
+  animation:
+    itemFadeIn 0.18s ease forwards;
+
+  transition:
+    color 0.15s ease,
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+
+.web-list li:nth-child(1),
+.photo-list li:nth-child(1),
+.design-list li:nth-child(1),
+.film-list li:nth-child(1) {
+
+  animation-delay: 0.02s;
+}
+
+
+.web-list li:nth-child(2),
+.photo-list li:nth-child(2),
+.design-list li:nth-child(2),
+.film-list li:nth-child(2) {
+
+  animation-delay: 0.045s;
+}
+
+
+.web-list li:nth-child(3),
+.photo-list li:nth-child(3),
+.design-list li:nth-child(3),
+.film-list li:nth-child(3) {
+
+  animation-delay: 0.07s;
+}
+
+
+.web-list li:nth-child(4),
+.photo-list li:nth-child(4),
+.design-list li:nth-child(4),
+.film-list li:nth-child(4) {
+
+  animation-delay: 0.095s;
+}
+
+
+.web-list li:nth-child(5),
+.photo-list li:nth-child(5),
+.design-list li:nth-child(5),
+.film-list li:nth-child(5) {
+
+  animation-delay: 0.12s;
+}
+
+
+.web-list li:nth-child(6),
+.photo-list li:nth-child(6),
+.design-list li:nth-child(6),
+.film-list li:nth-child(6) {
+
+  animation-delay: 0.145s;
+}
+
+
+.web-list li:nth-child(7),
+.photo-list li:nth-child(7),
+.design-list li:nth-child(7),
+.film-list li:nth-child(7) {
+
+  animation-delay: 0.17s;
+}
+
+
+.web-list li:nth-child(8),
+.photo-list li:nth-child(8),
+.design-list li:nth-child(8),
+.film-list li:nth-child(8) {
+
+  animation-delay: 0.195s;
+}
+
+
+.web-list li:nth-child(9),
+.photo-list li:nth-child(9),
+.design-list li:nth-child(9),
+.film-list li:nth-child(9) {
+
+  animation-delay: 0.22s;
+}
+
+
+@keyframes itemFadeIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateY(-25px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateY(0);
+
+  }
+
+}
+
+
+/* =========================
+   SUBMENU HOVER
+========================= */
+
+.web-list li:hover,
+.photo-list li:hover,
+.design-list li:hover,
+.film-list li:hover {
+
+  color: #555;
+
+  text-decoration: underline;
+
+  transform: translateX(-5px);
+}
+
+
+/* =========================
+   VIDEO
+========================= */
+
+.video-overlay {
+
+  width: 100%;
+
+  opacity: 0;
+
+  transform: translateY(8px);
+
+  animation:
+    contentFadeIn 0.55s ease forwards;
+}
+
+
+.video-overlay video {
+
+  width: 100%;
+
+  height: auto;
+
+  display: block;
+}
+
+
+.video-container {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  justify-content: center;
+
+  opacity: 0;
+
+  transform: translateY(8px);
+
+  animation:
+    contentFadeIn 0.5s ease forwards;
+}
+
+
+.video-year {
+
+  font-weight: 400;
+
+  font-size: 0.85rem;
+
+  font-style: italic;
+
+  margin-top: 10px;
+
+  color: gray;
+}
+
+
+.video-description {
+
+  color: gray;
+
+  font-size: 0.85rem;
+
+  margin-top: 5px;
+
+  text-align: left;
+
+  max-width: 80%;
+}
+
+
+.video-grid-vertical {
+
+  display: flex;
+
+  flex-direction: column;
+
+  width: 100%;
+
+  gap: 10px;
+
+  align-items: center;
+}
+
+
+.video-grid-vertical video {
+
+  width: 90%;
+
+  height: auto;
+
+  object-fit: contain;
+}
+
+
+/* =========================
+   CONTENT ANIMATION
+========================= */
+
+@keyframes contentFadeIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateY(8px);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform: translateY(0);
+
+  }
+
+}
+
+
+.left > img,
+.left > .split-left {
+
+  animation:
+    contentFadeIn 0.55s ease forwards;
+}
+
+
+/* =========================
+   EVON BUTTON
+========================= */
+
+.evon-toggle {
+
+  position: fixed;
+
+  top: 20px;
+
+  left: 20px;
+
+  font-size: 1.2rem;
+
+  font-weight: 500;
+
+  color: black;
+
+  cursor: pointer;
+
+  z-index: 100;
+
+  background: none;
+
+  padding: 0;
+
+  border: none;
+
+  font-family:
+    "Inter",
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+
+  display: none;
+
+  opacity: 0.8;
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+
+.evon-toggle:hover {
+
+  opacity: 1;
+
+  transform: translateX(4px);
+}
+
+
+/* =========================
+   VIDEO SPLIT
+========================= */
+
+.video-split {
+
+  position: fixed;
+
+  top: 50%;
+
+  left: 40%;
+
+  transform:
+    translate(-50%, -50%);
+
+  width: 45vw;
+
+  display: none;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 2vh;
+
+  z-index: 9999;
+
+  animation:
+    contentFadeIn 0.5s ease forwards;
+}
+
+
+.video-split video {
+
+  width: 100%;
+
+  height: auto;
+
+  max-height: 45vh;
+}
+
+
+.split-left {
+
+  display: flex;
+
+  flex-direction: column;
+
+  height: 100%;
+}
+
+
+.split-left .top,
+.split-left .bottom {
+
+  width: 100%;
+
+  height: 50%;
+
+  background-size: cover;
+
+  background-position: center;
+
+  background-repeat: no-repeat;
+}
+
+
+iframe {
+
+  width: 100%;
+
+  height: 90vh;
+
+  border: none;
+}
+
+
+/* =========================
+   HALLEY
+========================= */
+
+.halley-year {
+
+  color: gray;
+
+  font-size: 0.85rem;
+
+  font-style: italic;
+
+  position: absolute;
+
+  bottom: 0;
+
+  right: 100px;
+
+  z-index: 30;
+
+  background:
+    rgba(255, 255, 255, 0);
+
+  padding: 2px 5px;
+
+  animation:
+    contentFadeIn 0.5s ease forwards;
+}
+
+
+.schedule-desc {
+
+  color: rgb(251, 251, 251);
+
+  font-size: 0.68rem;
+
+  position: absolute;
+
+  bottom: 485px;
+
+  right: 420px;
+
+  transform:
+    translateY(-50%);
+
+  max-width: 220px;
+
+  text-align: left;
+
+  line-height: 1.4;
+
+  animation:
+    contentFadeIn 0.55s ease forwards;
+}
+
+
+/* =========================
+   ROOM 1305
+========================= */
+
+.room1305-info {
+
+  position: absolute;
+
+  top: 10%;
+
+  right: 65%;
+
+  max-width: 40%;
+
+  animation:
+    contentFadeIn 0.5s ease forwards;
+}
+
+
+.room1305-info .video-year,
+.room1305-info .video-description {
+
+  text-align: right;
+}
+
+
+/* =========================
+   POLO
+========================= */
+
+.next-button {
+
+  margin-top: 5px;
+
+  font-size: 1.2rem;
+
+  cursor: pointer;
+
+  background: none;
+
+  border: none;
+
+  color: black;
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+
+.next-button:hover {
+
+  opacity: 0.5;
+
+  transform: translateX(5px);
+}
+
+
+.iblame-year {
+
+  font-size: 0.85rem;
+
+  font-style: italic;
+
+  color: gray;
+
+  margin-bottom: 5px;
+}
+
+
+.iblame-desc {
+
+  color: gray;
+
+  font-size: 0.85rem;
+
+  margin-top: 5px;
+
+  max-width: 80%;
+}
+
+
+/* =========================
+   CHAIROSCOPE
+========================= */
+
+.chai-desc {
+
+  color: gray;
+
+  font-size: 0.85rem;
+
+  margin-top: 20px;
+
+  max-width: 80%;
+}
+
+
+.chai-year {
+
+  font-size: 0.85rem;
+
+  font-style: italic;
+
+  color: gray;
+
+  margin-top: 10px;
+}
+
+
+/* =========================
+   BAD DRIVERS
+========================= */
+
+.baddrivers-year {
+
+  font-size: 0.85rem;
+
+  font-style: italic;
+
+  color: gray;
+
+  margin-bottom: 5px;
+}
+
+
+.baddrivers-desc {
+
+  color: gray;
+
+  font-size: 0.85rem;
+
+  margin-top: 5px;
+
+  max-width: 80%;
+}
