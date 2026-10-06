@@ -1,1311 +1,1989 @@
-/* ==================================================
-   ELEMENTS
-================================================== */
+const title = document.querySelector("#title");
+const body = document.body;
+const cards = document.querySelectorAll(".card");
 
-const filmList = document.getElementById('filmList');
-const photoList = document.getElementById('photoList');
-const designList = document.getElementById('designList');
-const webList = document.getElementById('webList');
-
-const leftSide = document.getElementById('leftSide');
-const evonToggle = document.getElementById('evonToggle');
-
-const trailSound = document.getElementById('trailSound');
-
-const videoOverlay = document.createElement('div');
-videoOverlay.className = 'video-overlay';
-
-const centerVideoPlayer = document.createElement('video');
-centerVideoPlayer.controls = true;
-
-videoOverlay.appendChild(centerVideoPlayer);
-
-const videoSplit = document.getElementById('videoSplit');
-const leftVideo = document.getElementById('leftVideo');
-const rightVideo = document.getElementById('rightVideo');
-
-const defaultBackground =
-  "url('image/임연정-67722.jpg')";
+const imageTrail = document.querySelector("#image-trail");
+const wordTrail = document.querySelector("#word-trail");
+const blackTransition = document.querySelector("#black-transition");
 
 
-/* ==================================================
-   TRAIL / AUDIO VARIABLES
-================================================== */
+/* =========================================================
+   MODE
+========================================================= */
 
-let trailEnabled = true;
-
-let audioUnlocked = false;
-
-let mouseMoving = false;
-
-let lastTrailTime = 0;
-
-let movementTimer = null;
-
-let activeVideoContainer = null;
+let currentMode = 1;
+let transitioning = false;
 
 
-/* ==================================================
-   GET TRAIL LAYER
-================================================== */
+/* =========================================================
+   WORD TRAIL
+========================================================= */
 
-function getTrailLayer() {
+const trailWords = [
+  "WHAT IF?",
+  "YOUR TURN",
+  "WHY NOT?",
+  "MAKE A FORT",
+  "GET MESSY",
+  "OUR RULE",
+  "TRY AGAIN",
+  "MAKE BELIEVE",
+  "LOOK CLOSER",
+  "PLAY TOGETHER",
+  "CAN WE CHANGE IT?",
+  "WHAT CAN WE MAKE?"
+];
 
-  let layer =
-    document.getElementById('mouseTrailLayer');
 
-  /*
-    If the layer doesn't exist because the
-    left side was replaced, create it again.
-  */
+/* =========================================================
+   IMAGE TRAIL
+========================================================= */
 
-  if (!layer) {
+const trailImages = [
+  "image/one.png",
+  "image/two.png",
+  "image/three.png",
+  "image/four.png",
+  "image/five.png",
+  "image/six.png",
+  "image/seven.png",
+  "image/eight.png",
+  "image/nine.png",
+  "image/ten.png",
+  "image/eleven.png",
+  "image/twelve.png",
+  "image/thirteen.png",
+  "image/fourteen.png",
+  "image/fifteen.png",
+  "image/sixteen.png"
+];
 
-    layer =
-      document.createElement('div');
 
-    layer.id =
-      'mouseTrailLayer';
+/* =========================================================
+   CARD POSITIONS
+========================================================= */
 
-    leftSide.appendChild(layer);
+const positions = [
+  [6, 10],
+  [20, 8],
+  [36, 11],
+  [52, 8],
+  [68, 11],
+  [80, 15],
+
+  [5, 37],
+  [18, 51],
+
+  [72, 37],
+  [80, 52],
+
+  [7, 70],
+  [22, 79],
+  [37, 73],
+  [53, 80],
+  [68, 71],
+  [79, 64],
+
+  [84, 82]
+];
+
+
+/* =========================================================
+   SHUFFLE
+========================================================= */
+
+function shuffle(array) {
+
+  const shuffled = [...array];
+
+  for (
+    let i = shuffled.length - 1;
+    i > 0;
+    i--
+  ) {
+
+    const j =
+      Math.floor(
+        Math.random() * (i + 1)
+      );
+
+    [
+      shuffled[i],
+      shuffled[j]
+    ] = [
+      shuffled[j],
+      shuffled[i]
+    ];
+
   }
 
-  return layer;
+  return shuffled;
 }
 
 
-/* ==================================================
-   AUDIO SETTINGS
-================================================== */
+/* =========================================================
+   APPLE-STYLE CARD MOVEMENT
+========================================================= */
 
-trailSound.volume = 0.5;
+function setCardMovement(card) {
 
-trailSound.loop = true;
+  if (
+    card.classList.contains("add-card")
+  ) {
 
+    card.style.animation = "none";
 
-/* ==================================================
-   UNLOCK AUDIO
-================================================== */
-
-/*
-   Browsers do not allow audible autoplay
-   from mouse movement alone.
-
-   One click anywhere on the page unlocks
-   the audio.
-
-   The click itself does NOT start the music.
-
-   After that, mouse movement controls the music.
-*/
-
-document.addEventListener(
-  'click',
-  unlockAudio,
-  {
-    once: true
+    return;
   }
+
+
+  if (
+    card.classList.contains("flipped")
+  ) {
+
+    card.style.animation = "none";
+
+    return;
+  }
+
+
+  const moveX =
+    (
+      Math.random() * 2.8 - 1.4
+    ).toFixed(2);
+
+  const moveY =
+    (
+      Math.random() * 3.8 - 1.9
+    ).toFixed(2);
+
+  const moveR =
+    (
+      Math.random() * 2.4 - 1.2
+    ).toFixed(2);
+
+
+  card.style.setProperty(
+    "--move-x",
+    `${moveX}vw`
+  );
+
+  card.style.setProperty(
+    "--move-y",
+    `${moveY}vh`
+  );
+
+  card.style.setProperty(
+    "--move-r",
+    `${moveR}deg`
+  );
+
+
+  const duration =
+    22 +
+    Math.random() * 16;
+
+
+  const delay =
+    Math.random() * -18;
+
+
+  card.style.animation =
+    "none";
+
+  void card.offsetWidth;
+
+
+  card.style.animation =
+    `appleFloat ${duration}s cubic-bezier(0.45, 0, 0.55, 1) ${delay}s infinite`;
+}
+
+
+/* =========================================================
+   RANDOMIZE ORIGINAL CARDS
+========================================================= */
+
+function randomizeCards() {
+
+  const shuffledPositions =
+    shuffle(positions);
+
+
+  cards.forEach(
+    (card, index) => {
+
+      const [x, y] =
+        shuffledPositions[index];
+
+
+      card.style.setProperty(
+        "--x",
+        `${x}vw`
+      );
+
+      card.style.setProperty(
+        "--y",
+        `${y}vh`
+      );
+
+
+      setCardMovement(card);
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+const styleSheet =
+  document.createElement("style");
+
+styleSheet.textContent = `
+
+
+/* =========================================================
+   APPLE-STYLE FLOAT
+========================================================= */
+
+@keyframes appleFloat {
+
+  0% {
+
+    transform:
+      translate(0, 0)
+      rotate(0deg);
+
+  }
+
+  25% {
+
+    transform:
+      translate(
+        calc(var(--move-x) * 0.35),
+        calc(var(--move-y) * 0.25)
+      )
+      rotate(
+        calc(var(--move-r) * 0.3)
+      );
+
+  }
+
+  50% {
+
+    transform:
+      translate(
+        var(--move-x),
+        var(--move-y)
+      )
+      rotate(
+        var(--move-r)
+      );
+
+  }
+
+  75% {
+
+    transform:
+      translate(
+        calc(var(--move-x) * 0.55),
+        calc(var(--move-y) * 0.8)
+      )
+      rotate(
+        calc(var(--move-r) * 0.5)
+      );
+
+  }
+
+  100% {
+
+    transform:
+      translate(0, 0)
+      rotate(0deg);
+
+  }
+
+}
+
+
+/* =========================================================
+   TITLE → BLACK
+========================================================= */
+
+@keyframes titleToBlack {
+
+  0% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(1);
+
+    opacity: 1;
+
+  }
+
+  18% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.86);
+
+    opacity: 1;
+
+  }
+
+  36% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.35);
+
+    opacity: 1;
+
+  }
+
+  48% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.055);
+
+    opacity: 1;
+
+  }
+
+  58% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.08);
+
+    opacity: 1;
+
+  }
+
+  72% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(1.1);
+
+    opacity: 1;
+
+  }
+
+  88% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(5);
+
+    opacity: 0.65;
+
+  }
+
+  100% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(16);
+
+    opacity: 0;
+
+  }
+
+}
+
+
+/* =========================================================
+   BLACK SCREEN REVEAL
+
+   VERY SMOOTH CENTER EXPANSION
+
+   The circle no longer jumps through
+   multiple noticeable stages.
+========================================================= */
+
+@keyframes blackReveal {
+
+  0% {
+
+    clip-path:
+      circle(0% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  20% {
+
+    clip-path:
+      circle(0.15% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  40% {
+
+    clip-path:
+      circle(1.5% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  60% {
+
+    clip-path:
+      circle(12% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  78% {
+
+    clip-path:
+      circle(45% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  90% {
+
+    clip-path:
+      circle(90% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+  100% {
+
+    clip-path:
+      circle(160% at 50% 50%);
+
+    opacity: 1;
+
+  }
+
+}
+
+
+/* =========================================================
+   BLACK → TITLE
+========================================================= */
+
+@keyframes blackToTitle {
+
+  0% {
+
+    clip-path:
+      circle(160% at 50% 50%);
+
+  }
+
+  25% {
+
+    clip-path:
+      circle(80% at 50% 50%);
+
+  }
+
+  50% {
+
+    clip-path:
+      circle(35% at 50% 50%);
+
+  }
+
+  68% {
+
+    clip-path:
+      circle(8% at 50% 50%);
+
+  }
+
+  78% {
+
+    clip-path:
+      circle(1% at 50% 50%);
+
+  }
+
+  100% {
+
+    clip-path:
+      circle(0% at 50% 50%);
+
+  }
+
+}
+
+
+/* =========================================================
+   TITLE REAPPEAR
+========================================================= */
+
+@keyframes titleAppear {
+
+  0% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.055);
+
+    opacity: 0;
+
+  }
+
+  20% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.055);
+
+    opacity: 1;
+
+  }
+
+  45% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.15);
+
+    opacity: 1;
+
+  }
+
+  70% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(0.72);
+
+    opacity: 1;
+
+  }
+
+  100% {
+
+    transform:
+      translate(-50%, -50%)
+      scale(1);
+
+    opacity: 1;
+
+  }
+
+}
+
+`;
+
+document.head.appendChild(
+  styleSheet
 );
 
 
-function unlockAudio() {
+/* =========================================================
+   INITIAL RANDOMIZATION
+========================================================= */
 
-  trailSound.muted = true;
-
-  trailSound.play()
-    .then(function() {
-
-      trailSound.pause();
-
-      trailSound.currentTime = 0;
-
-      trailSound.muted = false;
-
-      audioUnlocked = true;
-
-      console.log(
-        'Audio unlocked. Mouse movement can now control sound.'
-      );
-
-    })
-    .catch(function(error) {
-
-      console.log(
-        'Could not unlock audio:',
-        error
-      );
-
-    });
-}
+randomizeCards();
 
 
-/* ==================================================
-   START MUSIC
-================================================== */
+/* =========================================================
+   CARD → BLACK TRANSITION
+========================================================= */
 
-function startTrailSound() {
+function enterBlackScreen() {
 
-  if (!audioUnlocked) {
+  if (transitioning) {
     return;
   }
+
+
+  transitioning = true;
+
 
   /*
-    If already playing, do nothing.
+    Keep the cards underneath
+    while the black circle begins.
   */
 
-  if (!trailSound.paused) {
-    return;
-  }
+  body.className =
+    "black-transition";
 
-  trailSound.play()
-    .then(function() {
 
-      console.log(
-        'Trail sound playing'
-      );
+  /*
+    Title movement.
+  */
 
-    })
-    .catch(function(error) {
+  title.style.animation =
+    "titleToBlack 2.15s cubic-bezier(0.16, 1, 0.3, 1) forwards";
 
-      console.log(
-        'Could not play trail sound:',
-        error
-      );
 
-    });
+  /*
+    Smooth black circle.
+
+    Using a single smooth easing curve
+    instead of the default stepped feeling.
+  */
+
+  blackTransition.style.animation =
+    "blackReveal 2.15s cubic-bezier(0.16, 1, 0.3, 1) forwards";
+
+
+  /*
+    Only remove everything after
+    the animation has completely finished.
+  */
+
+  setTimeout(
+    () => {
+
+      body.className =
+        "black-mode";
+
+      currentMode = 4;
+
+      title.style.animation =
+        "none";
+
+      blackTransition.style.animation =
+        "none";
+
+      transitioning = false;
+
+    },
+    2200
+  );
+
 }
 
 
-/* ==================================================
-   STOP MUSIC
-================================================== */
+/* =========================================================
+   TITLE CLICK
+========================================================= */
 
-function stopTrailSound() {
+title.addEventListener(
+  "click",
+  () => {
 
-  trailSound.pause();
-
-  trailSound.currentTime = 0;
-
-}
-
-
-/* ==================================================
-   MOUSE TRAIL
-================================================== */
-
-leftSide.addEventListener(
-  'mousemove',
-  function(event) {
-
-    if (!trailEnabled) {
+    if (transitioning) {
       return;
     }
 
 
-    /* ==============================================
-       MOUSE IS MOVING
-    ============================================== */
+    /* -----------------------------------------------------
+       CARD → BLACK
+    ----------------------------------------------------- */
 
-    mouseMoving = true;
+    if (currentMode === 3) {
 
+      enterBlackScreen();
 
-    /*
-      Start the music.
-    */
-
-    startTrailSound();
+      return;
+    }
 
 
-    /*
-      Every time the mouse moves,
-      reset the "stop" timer.
+    /* -----------------------------------------------------
+       IMAGE → WORD
+    ----------------------------------------------------- */
 
-      If the mouse stops moving for
-      150 milliseconds, music stops.
-    */
+    if (currentMode === 1) {
 
-    clearTimeout(movementTimer);
+      currentMode = 2;
 
-    movementTimer = setTimeout(
-      function() {
+      body.className =
+        "word-mode";
 
-        mouseMoving = false;
-
-        stopTrailSound();
-
-      },
-      150
-    );
+      return;
+    }
 
 
-    /* ==============================================
-       TRAIL SPEED
-    ============================================== */
+    /* -----------------------------------------------------
+       WORD → CARDS
+    ----------------------------------------------------- */
 
-    const now = Date.now();
+    if (currentMode === 2) {
+
+      currentMode = 3;
+
+      body.className =
+        "card-mode";
+
+      return;
+    }
+
+  }
+);
+
+
+/* =========================================================
+   BLACK SCREEN → IMAGE
+========================================================= */
+
+blackTransition.addEventListener(
+  "click",
+  () => {
 
     if (
-      now - lastTrailTime < 30
+      currentMode !== 4 ||
+      transitioning
     ) {
       return;
     }
 
-    lastTrailTime = now;
+
+    transitioning = true;
 
 
-    /* ==============================================
-       MOUSE POSITION
-    ============================================== */
-
-    const rect =
-      leftSide.getBoundingClientRect();
+    body.className =
+      "black-transition";
 
 
-    const x =
-      event.clientX - rect.left;
+    title.style.display =
+      "block";
+
+    title.style.opacity =
+      "0";
+
+    title.style.transform =
+      "translate(-50%, -50%) scale(0.055)";
 
 
-    const y =
-      event.clientY - rect.top;
+    blackTransition.style.animation =
+      "blackToTitle 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards";
 
 
-    /* ==============================================
-       TRAIL LAYER
-    ============================================== */
+    title.style.animation =
+      "titleAppear 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards";
 
-    const trailLayer =
-      getTrailLayer();
-
-
-    /* ==============================================
-       CREATE TRAIL
-    ============================================== */
-
-    const trail =
-      document.createElement('div');
-
-    trail.className =
-      'mouse-trail';
-
-
-    trail.style.left =
-      x + 'px';
-
-
-    trail.style.top =
-      y + 'px';
-
-
-    trailLayer.appendChild(
-      trail
-    );
-
-
-    /* ==============================================
-       REMOVE TRAIL
-    ============================================== */
 
     setTimeout(
-      function() {
+      () => {
 
-        trail.remove();
+        body.className =
+          "image-mode";
+
+        currentMode = 1;
+
+
+        blackTransition.style.animation =
+          "none";
+
+        blackTransition.style.opacity =
+          "0";
+
+
+        title.style.animation =
+          "none";
+
+        title.style.transform =
+          "translate(-50%, -50%) scale(1)";
+
+        title.style.opacity =
+          "1";
+
+        title.style.display =
+          "";
+
+
+        transitioning = false;
 
       },
-      700
+      1850
     );
 
   }
 );
 
 
-/* ==================================================
-   MOUSE LEAVES LEFT SIDE
-================================================== */
+/* =========================================================
+   CARD DRAG + FLIP
+========================================================= */
 
-leftSide.addEventListener(
-  'mouseleave',
-  function() {
+function makeCardInteractive(card) {
 
-    mouseMoving = false;
+  let startX = 0;
+  let startY = 0;
 
-    clearTimeout(
-      movementTimer
-    );
+  let originalLeft = 0;
+  let originalTop = 0;
 
-    stopTrailSound();
+  let moved = false;
+
+  let lastPointerX = 0;
+  let lastPointerY = 0;
+
+  let velocityX = 0;
+  let velocityY = 0;
+
+  let lastMoveTime = 0;
+
+
+  /* -------------------------------------------------------
+     POINTER DOWN
+  ------------------------------------------------------- */
+
+  card.addEventListener(
+    "pointerdown",
+    (e) => {
+
+      if (
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA" ||
+        e.target.tagName === "BUTTON"
+      ) {
+
+        return;
+
+      }
+
+
+      const rect =
+        card.getBoundingClientRect();
+
+
+      startX =
+        e.clientX;
+
+      startY =
+        e.clientY;
+
+
+      originalLeft =
+        rect.left;
+
+      originalTop =
+        rect.top;
+
+
+      lastPointerX =
+        e.clientX;
+
+      lastPointerY =
+        e.clientY;
+
+
+      velocityX = 0;
+      velocityY = 0;
+
+
+      lastMoveTime =
+        performance.now();
+
+
+      moved = false;
+
+
+      card.style.animation =
+        "none";
+
+
+      card.style.left =
+        `${originalLeft}px`;
+
+      card.style.top =
+        `${originalTop}px`;
+
+
+      card.style.transform =
+        "none";
+
+
+      card.style.transition =
+        "none";
+
+
+      card.setPointerCapture(
+        e.pointerId
+      );
+
+
+      card.classList.add(
+        "dragging"
+      );
+
+    }
+  );
+
+
+  /* -------------------------------------------------------
+     POINTER MOVE
+  ------------------------------------------------------- */
+
+  card.addEventListener(
+    "pointermove",
+    (e) => {
+
+      if (
+        !card.hasPointerCapture(
+          e.pointerId
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      const now =
+        performance.now();
+
+
+      const dx =
+        e.clientX -
+        startX;
+
+      const dy =
+        e.clientY -
+        startY;
+
+
+      const deltaTime =
+        Math.max(
+          now - lastMoveTime,
+          1
+        );
+
+
+      velocityX =
+        (
+          e.clientX -
+          lastPointerX
+        ) /
+        deltaTime;
+
+
+      velocityY =
+        (
+          e.clientY -
+          lastPointerY
+        ) /
+        deltaTime;
+
+
+      lastPointerX =
+        e.clientX;
+
+      lastPointerY =
+        e.clientY;
+
+      lastMoveTime =
+        now;
+
+
+      if (
+        Math.abs(dx) > 5 ||
+        Math.abs(dy) > 5
+      ) {
+
+        moved = true;
+
+      }
+
+
+      card.style.left =
+        `${originalLeft + dx}px`;
+
+      card.style.top =
+        `${originalTop + dy}px`;
+
+    }
+  );
+
+
+  /* -------------------------------------------------------
+     POINTER UP
+  ------------------------------------------------------- */
+
+  card.addEventListener(
+    "pointerup",
+    (e) => {
+
+      if (
+        !card.hasPointerCapture(
+          e.pointerId
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      card.releasePointerCapture(
+        e.pointerId
+      );
+
+
+      card.classList.remove(
+        "dragging"
+      );
+
+
+      /* ---------------------------------------------------
+         DRAGGED
+      --------------------------------------------------- */
+
+      if (moved) {
+
+        const momentumX =
+          Math.max(
+            -45,
+            Math.min(
+              45,
+              velocityX * 90
+            )
+          );
+
+
+        const momentumY =
+          Math.max(
+            -45,
+            Math.min(
+              45,
+              velocityY * 90
+            )
+          );
+
+
+        const currentLeft =
+          parseFloat(
+            card.style.left
+          );
+
+
+        const currentTop =
+          parseFloat(
+            card.style.top
+          );
+
+
+        card.style.transition =
+          "left 0.65s cubic-bezier(0.16, 1, 0.3, 1), " +
+          "top 0.65s cubic-bezier(0.16, 1, 0.3, 1)";
+
+
+        card.style.left =
+          `${currentLeft + momentumX}px`;
+
+        card.style.top =
+          `${currentTop + momentumY}px`;
+
+
+        setTimeout(
+          () => {
+
+            card.style.transition =
+              "none";
+
+
+            if (
+              !card.classList.contains(
+                "flipped"
+              )
+            ) {
+
+              setCardMovement(
+                card
+              );
+
+            }
+
+          },
+          700
+        );
+
+
+        return;
+
+      }
+
+
+      /* ---------------------------------------------------
+         + CARD
+      --------------------------------------------------- */
+
+      if (
+        card.classList.contains(
+          "add-card"
+        ) &&
+        !card.classList.contains(
+          "has-image"
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      /* ---------------------------------------------------
+         FLIP
+      --------------------------------------------------- */
+
+      card.classList.toggle(
+        "flipped"
+      );
+
+
+      /* ---------------------------------------------------
+         TEXT SIDE
+      --------------------------------------------------- */
+
+      if (
+        card.classList.contains(
+          "flipped"
+        )
+      ) {
+
+        card.style.animation =
+          "none";
+
+        card.style.transition =
+          "none";
+
+      }
+
+
+      /* ---------------------------------------------------
+         PHOTO SIDE
+      --------------------------------------------------- */
+
+      else {
+
+        setTimeout(
+          () => {
+
+            setCardMovement(
+              card
+            );
+
+          },
+          50
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   INITIAL CARD INTERACTION
+========================================================= */
+
+cards.forEach(
+  makeCardInteractive
+);
+
+
+/* =========================================================
+   CUSTOM CARD SYSTEM
+========================================================= */
+
+const addCard =
+  document.querySelector(
+    ".add-card"
+  );
+
+const customImageInput =
+  document.querySelector(
+    "#custom-image-input"
+  );
+
+let customImageURL = null;
+
+
+/* =========================================================
+   CLICK +
+========================================================= */
+
+addCard.addEventListener(
+  "click",
+  (e) => {
+
+    if (
+      e.target.tagName === "BUTTON" ||
+      e.target.tagName === "INPUT" ||
+      e.target.tagName === "TEXTAREA"
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      !addCard.classList.contains(
+        "flipped"
+      ) &&
+      !addCard.classList.contains(
+        "has-image"
+      )
+    ) {
+
+      customImageInput.click();
+
+    }
 
   }
 );
 
 
-/* ==================================================
-   STOP TRAIL
-================================================== */
+/* =========================================================
+   ADD RULE BUTTON
+========================================================= */
 
-function stopTrail() {
+addCard.addEventListener(
+  "click",
+  (e) => {
 
-  trailEnabled = false;
+    if (
+      e.target.id ===
+      "save-custom-card"
+    ) {
 
-  mouseMoving = false;
+      e.preventDefault();
 
-  clearTimeout(
-    movementTimer
-  );
+      e.stopPropagation();
 
-  stopTrailSound();
+      finishCustomCard();
 
-
-  const trailLayer =
-    document.getElementById(
-      'mouseTrailLayer'
-    );
-
-
-  if (trailLayer) {
-
-    trailLayer.innerHTML = '';
+    }
 
   }
-
-}
-
-
-/* ==================================================
-   START TRAIL
-================================================== */
-
-function startTrail() {
-
-  trailEnabled = true;
-
-}
+);
 
 
-/* ==================================================
-   MENU
-================================================== */
+/* =========================================================
+   IMAGE UPLOAD
+========================================================= */
 
-function hideAllLists() {
+customImageInput.addEventListener(
+  "change",
+  (e) => {
 
-  webList.style.display = 'none';
-  filmList.style.display = 'none';
-  photoList.style.display = 'none';
-  designList.style.display = 'none';
-
-  webList.classList.remove('menu-open');
-  filmList.classList.remove('menu-open');
-  photoList.classList.remove('menu-open');
-  designList.classList.remove('menu-open');
-
-}
+    const file =
+      e.target.files[0];
 
 
-function toggleList(list) {
+    if (!file) {
+      return;
+    }
 
-  const isOpen =
-    list.style.display === 'block';
 
-  hideAllLists();
+    customImageURL =
+      URL.createObjectURL(file);
 
-  if (!isOpen) {
 
-    list.style.display = 'block';
+    const front =
+      addCard.querySelector(
+        ".add-card-front"
+      );
 
-    list.classList.remove(
-      'menu-open'
+
+    front.style.backgroundImage =
+      `url("${customImageURL}")`;
+
+
+    addCard.classList.add(
+      "has-image"
     );
 
-    void list.offsetWidth;
 
-    list.classList.add(
-      'menu-open'
+    setTimeout(
+      () => {
+
+        addCard.classList.add(
+          "flipped"
+        );
+
+      },
+      100
     );
 
   }
-
-}
-
-
-document.getElementById('web')
-  .addEventListener(
-    'click',
-    function() {
-
-      toggleList(webList);
-
-    }
-  );
+);
 
 
-document.getElementById('film')
-  .addEventListener(
-    'click',
-    function() {
+/* =========================================================
+   FINISH CUSTOM CARD
+========================================================= */
 
-      toggleList(filmList);
+function finishCustomCard() {
 
-    }
-  );
+  const ruleTitleInput =
+    addCard.querySelector(
+      "#custom-rule-title"
+    );
 
-
-document.getElementById('design')
-  .addEventListener(
-    'click',
-    function() {
-
-      toggleList(designList);
-
-    }
-  );
+  const ruleDescriptionInput =
+    addCard.querySelector(
+      "#custom-rule-description"
+    );
 
 
-/* ==================================================
-   REMOVE VIDEO
-================================================== */
+  if (!ruleTitleInput) {
+    return;
+  }
 
-function removeActiveVideo() {
 
-  if (activeVideoContainer) {
+  const ruleTitle =
+    ruleTitleInput.value.trim();
 
-    activeVideoContainer.remove();
+  const ruleDescription =
+    ruleDescriptionInput.value.trim();
 
-    activeVideoContainer = null;
+
+  if (!ruleTitle) {
+
+    ruleTitleInput.focus();
+
+    return;
 
   }
 
 
-  centerVideoPlayer.pause();
-
-  centerVideoPlayer.src = '';
-
-
-  videoSplit.style.display =
-    'none';
+  const plusRect =
+    addCard.getBoundingClientRect();
 
 
-  leftVideo.pause();
-
-  rightVideo.pause();
-
-
-  leftVideo.src = '';
-
-  rightVideo.src = '';
-
-}
+  const destination =
+    getExtremeDestination(
+      plusRect.left,
+      plusRect.top,
+      plusRect.width,
+      plusRect.height
+    );
 
 
-/* ==================================================
-   RESET HOME
-================================================== */
-
-function resetLeftSide() {
-
-  removeActiveVideo();
-
-  startTrail();
+  const completedCard =
+    document.createElement(
+      "div"
+    );
 
 
-  leftSide.innerHTML = `
+  completedCard.className =
+    "card custom-completed-card flipped";
 
-    <div
-      class="left-text"
-      id="introText"
-    >
-      Evon is a New York and Seoul based communication designer interested in visual storytelling, branding, and experience. She explores how design can shape the way we see, feel, and interact with the world around us.
+
+  completedCard.style.left =
+    `${plusRect.left}px`;
+
+  completedCard.style.top =
+    `${plusRect.top}px`;
+
+
+  completedCard.style.width =
+    `${plusRect.width}px`;
+
+  completedCard.style.height =
+    `${plusRect.height}px`;
+
+
+  completedCard.style.zIndex =
+    "50";
+
+
+  completedCard.style.opacity =
+    "1";
+
+
+  completedCard.style.transform =
+    "scale(1.08) rotate(-3deg)";
+
+
+  completedCard.style.animation =
+    "none";
+
+
+  completedCard.innerHTML = `
+
+    <div class="card-inner">
+
+      <div
+        class="card-front"
+        style="
+          background-image: url('${customImageURL}');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+        "
+      ></div>
+
+
+      <div class="card-back">
+
+        <span>YOUR RULE</span>
+
+        <h2>
+          ${escapeHTML(ruleTitle)}
+        </h2>
+
+        <p>
+          ${escapeHTML(ruleDescription)}
+        </p>
+
+      </div>
+
     </div>
-
-    <div id="mouseTrailLayer"></div>
 
   `;
 
 
-  leftSide.style.backgroundImage =
-    defaultBackground;
+  addCard.parentNode.insertBefore(
+    completedCard,
+    addCard
+  );
 
 
-  leftSide.style.backgroundSize =
-    'cover';
+  makeCardInteractive(
+    completedCard
+  );
 
 
-  leftSide.style.backgroundPosition =
-    'center';
+  void completedCard.offsetWidth;
 
 
-  leftSide.style.backgroundColor =
-    'transparent';
+  completedCard.style.transition =
+    "transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), " +
+    "left 2.2s cubic-bezier(0.16, 1, 0.3, 1), " +
+    "top 2.2s cubic-bezier(0.16, 1, 0.3, 1)";
 
 
-  evonToggle.style.display =
-    'none';
+  completedCard.style.left =
+    `${destination.x}px`;
+
+  completedCard.style.top =
+    `${destination.y}px`;
+
+  completedCard.style.transform =
+    "scale(1) rotate(0deg)";
 
 
-  hideAllLists();
+  resetAddCard();
+
+
+  setTimeout(
+    () => {
+
+      completedCard.style.transition =
+        "none";
+
+
+      if (
+        completedCard.classList.contains(
+          "flipped"
+        )
+      ) {
+
+        completedCard.style.animation =
+          "none";
+
+      }
+
+    },
+    2300
+  );
 
 }
 
 
-/* ==================================================
-   SHOW EVON BUTTON
-================================================== */
+/* =========================================================
+   EXTREME DESTINATION
+========================================================= */
 
-function showEvonToggle() {
+function getExtremeDestination(
+  startX,
+  startY,
+  cardWidth,
+  cardHeight
+) {
 
-  evonToggle.style.display =
-    'block';
+  const margin = 30;
+
+  const screenWidth =
+    window.innerWidth;
+
+  const screenHeight =
+    window.innerHeight;
+
+
+  const destinations = [
+
+    {
+      x: margin,
+      y: margin
+    },
+
+    {
+      x:
+        (screenWidth -
+          cardWidth) / 2,
+
+      y: margin
+    },
+
+    {
+      x:
+        screenWidth -
+        cardWidth -
+        margin,
+
+      y: margin
+    },
+
+    {
+      x: margin,
+
+      y:
+        (screenHeight -
+          cardHeight) / 2
+    },
+
+    {
+      x:
+        screenWidth -
+        cardWidth -
+        margin,
+
+      y:
+        (screenHeight -
+          cardHeight) / 2
+    },
+
+    {
+      x: margin,
+
+      y:
+        screenHeight -
+        cardHeight -
+        margin
+    },
+
+    {
+      x:
+        (screenWidth -
+          cardWidth) / 2,
+
+      y:
+        screenHeight -
+        cardHeight -
+        margin
+    },
+
+    {
+      x:
+        screenWidth -
+        cardWidth -
+        margin,
+
+      y:
+        screenHeight -
+        cardHeight -
+        margin
+    }
+
+  ];
+
+
+  destinations.forEach(
+    (destination) => {
+
+      destination.distance =
+        Math.hypot(
+          destination.x -
+            startX,
+
+          destination.y -
+            startY
+        );
+
+    }
+  );
+
+
+  destinations.sort(
+    (a, b) =>
+      b.distance -
+      a.distance
+  );
+
+
+  const farthest =
+    destinations.slice(
+      0,
+      3
+    );
+
+
+  const selected =
+    farthest[
+      Math.floor(
+        Math.random() *
+        farthest.length
+      )
+    ];
+
+
+  return {
+
+    x: selected.x,
+
+    y: selected.y
+
+  };
 
 }
 
 
-/* ==================================================
-   FILM
-================================================== */
-
-filmList.querySelectorAll('li')
-.forEach(function(item) {
-
-  item.addEventListener(
-    'click',
-    function() {
-
-      stopTrail();
-
-      removeActiveVideo();
-
-
-      const videoSrc =
-        item.getAttribute(
-          'data-video'
-        );
-
-
-      leftSide.innerHTML = '';
-
-
-      leftSide.style.backgroundImage =
-        defaultBackground;
-
-
-      leftSide.style.backgroundSize =
-        'cover';
-
-
-      leftSide.style.backgroundPosition =
-        'center';
-
-
-      leftSide.style.backgroundColor =
-        'transparent';
-
-
-      videoSplit.style.display =
-        'none';
-
-
-      const videoContainer =
-        document.createElement(
-          'div'
-        );
-
-
-      videoContainer.className =
-        'video-container';
-
-
-      videoContainer.style.position =
-        'fixed';
-
-
-      videoContainer.style.top =
-        '50%';
-
-
-      videoContainer.style.left =
-        '50%';
-
-
-      videoContainer.style.transform =
-        'translate(-50%, -50%)';
-
-
-      videoContainer.style.width =
-        '45vw';
-
-
-      videoContainer.style.maxWidth =
-        '700px';
-
-
-      videoContainer.style.display =
-        'flex';
-
-
-      videoContainer.style.flexDirection =
-        'column';
-
-
-      videoContainer.style.alignItems =
-        'center';
-
-
-      videoContainer.style.zIndex =
-        '10000';
-
-
-      centerVideoPlayer.src =
-        videoSrc;
-
-
-      centerVideoPlayer.controls =
-        true;
-
-
-      centerVideoPlayer.load();
-
-
-      centerVideoPlayer.play()
-        .catch(function() {});
-
-
-      centerVideoPlayer.style.width =
-        '100%';
-
-
-      centerVideoPlayer.style.height =
-        'auto';
-
-
-      centerVideoPlayer.style.display =
-        'block';
-
-
-      const infoWrapper =
-        document.createElement(
-          'div'
-        );
-
-
-      infoWrapper.style.width =
-        '100%';
-
-
-      infoWrapper.style.marginTop =
-        '10px';
-
-
-      const year =
-        document.createElement(
-          'div'
-        );
-
-
-      year.className =
-        'video-year';
-
-
-      const desc =
-        document.createElement(
-          'div'
-        );
-
-
-      desc.className =
-        'video-description';
-
-
-      if (
-        videoSrc ===
-        'compressed/C0251.mp4'
-      ) {
-
-        year.textContent =
-          '(2025)';
-
-
-        desc.textContent =
-          'A contemplative short capturing the quiet after loss—sitting in a car, watching snow fall, the world safe yet emptied. It invites viewers to imagine their own stories, emotions, and what has been carried away or left behind.';
-
-      }
-
-
-      infoWrapper.appendChild(
-        year
-      );
-
-
-      infoWrapper.appendChild(
-        desc
-      );
-
-
-      videoContainer.appendChild(
-        videoOverlay
-      );
-
-
-      videoContainer.appendChild(
-        infoWrapper
-      );
-
-
-      document.body.appendChild(
-        videoContainer
-      );
-
-
-      activeVideoContainer =
-        videoContainer;
-
-
-      showEvonToggle();
-
-    }
+/* =========================================================
+   RESET + CARD
+========================================================= */
+
+function resetAddCard() {
+
+  addCard.classList.remove(
+    "flipped",
+    "has-image",
+    "custom-complete"
   );
 
-});
+
+  customImageURL =
+    null;
 
 
-/* ==================================================
-   PHOTOGRAPHY
-================================================== */
+  addCard.querySelector(
+    ".card-inner"
+  ).innerHTML = `
 
-photoList.querySelectorAll('li')
-.forEach(function(item) {
+    <div class="card-front add-card-front">
 
-  item.addEventListener(
-    'click',
-    function() {
+      <span>+</span>
 
-      stopTrail();
-
-      removeActiveVideo();
+    </div>
 
 
-      const imgSrc =
-        item.getAttribute(
-          'data-img'
-        );
+    <div class="card-back add-card-back">
+
+      <label>
+
+        RULE
+
+        <input
+          type="text"
+          id="custom-rule-title"
+          placeholder="Write your rule..."
+          maxlength="60"
+        >
+
+      </label>
 
 
-      leftSide.innerHTML =
-        '';
+      <label>
+
+        WHY?
+
+        <textarea
+          id="custom-rule-description"
+          placeholder="What does this rule mean?"
+          maxlength="180"
+        ></textarea>
+
+      </label>
 
 
-      leftSide.style.backgroundImage =
-        `url('${imgSrc}')`;
+      <button
+        type="button"
+        id="save-custom-card"
+      >
+        ADD RULE
+      </button>
+
+    </div>
+
+  `;
 
 
-      leftSide.style.backgroundSize =
-        'cover';
+  customImageInput.value =
+    "";
 
 
-      leftSide.style.backgroundPosition =
-        'center';
+  addCard.style.transform =
+    "none";
+
+  addCard.style.animation =
+    "none";
+
+  addCard.style.transition =
+    "none";
+
+  addCard.style.zIndex =
+    "10";
+
+}
 
 
-      leftSide.style.backgroundColor =
-        'transparent';
+/* =========================================================
+   SAFE TEXT
+========================================================= */
+
+function escapeHTML(text) {
+
+  const div =
+    document.createElement(
+      "div"
+    );
+
+  div.textContent =
+    text;
+
+  return div.innerHTML;
+
+}
 
 
-      showEvonToggle();
+/* =========================================================
+   IMAGE TRAIL
+========================================================= */
 
+let lastImageX = 0;
+let lastImageY = 0;
+let lastImageTime = 0;
+
+
+document.addEventListener(
+  "mousemove",
+  (e) => {
+
+    if (
+      currentMode !== 1
+    ) {
+      return;
     }
-  );
 
-});
 
+    const now =
+      Date.now();
 
-/* ==================================================
-   BRAND & IDENTITY
-================================================== */
 
-webList.querySelectorAll('li')
-.forEach(function(item) {
-
-  item.addEventListener(
-    'click',
-    function() {
-
-      stopTrail();
-
-      removeActiveVideo();
-
-
-      leftSide.innerHTML =
-        '';
-
-
-      leftSide.style.backgroundImage =
-        'none';
-
-
-      leftSide.style.backgroundColor =
-        'white';
-
-
-      /* ============================================
-         SØNNER
-      ============================================ */
-
-      if (item.id === 'home') {
-
-        leftSide.style.backgroundImage =
-          "url('image/sønner.png')";
-
-
-        leftSide.style.backgroundSize =
-          'contain';
-
-
-        leftSide.style.backgroundRepeat =
-          'no-repeat';
-
-
-        leftSide.style.backgroundPosition =
-          'center';
-
-
-        const year =
-          document.createElement(
-            'div'
-          );
-
-
-        year.className =
-          'halley-year';
-
-
-        year.textContent =
-          '(2024)';
-
-
-        year.style.bottom =
-          '20px';
-
-
-        year.style.right =
-          '20px';
-
-
-        leftSide.appendChild(
-          year
-        );
-
-
-        const desc =
-          document.createElement(
-            'div'
-          );
-
-
-        desc.className =
-          'schedule-desc';
-
-
-        desc.textContent =
-          'A web-based design project exploring SØNNER, a visual identity and digital experience centered around golf, art, and culture.';
-
-
-        leftSide.appendChild(
-          desc
-        );
-
-      }
-
-
-      /* ============================================
-         POLO
-      ============================================ */
-
-      else if (
-        item.id === 'iblame'
-      ) {
-
-        leftSide.style.backgroundImage =
-          "url('image/polo.png')";
-
-
-        leftSide.style.backgroundSize =
-          'contain';
-
-
-        leftSide.style.backgroundRepeat =
-          'no-repeat';
-
-
-        leftSide.style.backgroundPosition =
-          'center';
-
-
-        const year =
-          document.createElement(
-            'div'
-          );
-
-
-        year.className =
-          'iblame-year';
-
-
-        year.textContent =
-          '(2025)';
-
-
-        year.style.position =
-          'absolute';
-
-
-        year.style.bottom =
-          '20px';
-
-
-        year.style.right =
-          '20px';
-
-
-        leftSide.appendChild(
-          year
-        );
-
-
-        const desc =
-          document.createElement(
-            'div'
-          );
-
-
-        desc.className =
-          'iblame-desc';
-
-
-        desc.textContent =
-          'A web-based project exploring Polo through interactive design, visual identity, and digital storytelling.';
-
-
-        desc.style.position =
-          'absolute';
-
-
-        desc.style.bottom =
-          '20px';
-
-
-        desc.style.left =
-          '20px';
-
-
-        desc.style.maxWidth =
-          '250px';
-
-
-        leftSide.appendChild(
-          desc
-        );
-
-      }
-
-
-      /* ============================================
-         CHAIROSCOPE
-      ============================================ */
-
-      else if (
-        item.id === 'chai'
-      ) {
-
-        const videoContainer =
-          document.createElement(
-            'div'
-          );
-
-
-        videoContainer.className =
-          'video-container';
-
-
-        const chaiVideo =
-          document.createElement(
-            'video'
-          );
-
-
-        chaiVideo.src =
-          'video/chairoscope_ short.mov';
-
-
-        chaiVideo.controls =
-          true;
-
-
-        chaiVideo.autoplay =
-          true;
-
-
-        chaiVideo.style.width =
-          '90%';
-
-
-        const chaiYear =
-          document.createElement(
-            'div'
-          );
-
-
-        chaiYear.className =
-          'chai-year';
-
-
-        chaiYear.textContent =
-          '(2025)';
-
-
-        const additionalDesc =
-          document.createElement(
-            'div'
-          );
-
-
-        additionalDesc.className =
-          'chai-desc';
-
-
-        additionalDesc.textContent =
-          'An interactive web-based design system where users select a birthday to reveal a unique chair with a corresponding description, inspired by zodiac-style personalization. Each chair’s form and attributes are derived from the designer’s birthday.';
-
-
-        videoContainer.appendChild(
-          chaiVideo
-        );
-
-
-        videoContainer.appendChild(
-          chaiYear
-        );
-
-
-        videoContainer.appendChild(
-          additionalDesc
-        );
-
-
-        leftSide.appendChild(
-          videoContainer
-        );
-
-      }
-
-
-      showEvonToggle();
-
+    if (
+      now - lastImageTime <
+      80
+    ) {
+      return;
     }
-  );
 
-});
 
+    const distance =
+      Math.hypot(
+        e.clientX -
+          lastImageX,
 
-/* ==================================================
-   GRAPHIC DESIGN
-================================================== */
+        e.clientY -
+          lastImageY
+      );
 
-designList.querySelectorAll('li')
-.forEach(function(item) {
 
-  item.addEventListener(
-    'click',
-    function() {
-
-      stopTrail();
-
-      removeActiveVideo();
-
-
-      leftSide.innerHTML =
-        '';
-
-
-      leftSide.style.backgroundImage =
-        'none';
-
-
-      leftSide.style.backgroundColor =
-        'white';
-
-
-      /* ============================================
-         HALLEY'S COMET
-      ============================================ */
-
-      if (
-        item.id === 'halley'
-      ) {
-
-        leftSide.style.backgroundImage =
-          "url('image/final versions-01.png')";
-
-
-        leftSide.style.backgroundSize =
-          '65%';
-
-
-        leftSide.style.backgroundRepeat =
-          'no-repeat';
-
-
-        leftSide.style.backgroundPosition =
-          '68% center';
-
-
-        const inspiredText =
-          document.createElement(
-            'div'
-          );
-
-
-        inspiredText.className =
-          'schedule-desc';
-
-
-        inspiredText.textContent =
-          'A poster about Halley’s Comet, illustrating its first observation in Korea during the Joseon Dynasty and its historical timeline.';
-
-
-        inspiredText.style.color =
-          'gray';
-
-
-        inspiredText.style.position =
-          'absolute';
-
-
-        inspiredText.style.left =
-          '30px';
-
-
-        inspiredText.style.top =
-          '50%';
-
-
-        inspiredText.style.transform =
-          'translateY(-50%)';
-
-
-        inspiredText.style.width =
-          '150px';
-
-
-        inspiredText.style.maxWidth =
-          '150px';
-
-
-        inspiredText.style.lineHeight =
-          '1.4';
-
-
-        inspiredText.style.fontSize =
-          '0.68rem';
-
-
-        inspiredText.style.textAlign =
-          'left';
-
-
-        inspiredText.style.zIndex =
-          '5';
-
-
-        leftSide.appendChild(
-          inspiredText
-        );
-
-
-        const halleyYear =
-          document.createElement(
-            'div'
-          );
-
-
-        halleyYear.className =
-          'halley-year';
-
-
-        halleyYear.textContent =
-          '(2025)';
-
-
-        halleyYear.style.position =
-          'absolute';
-
-
-        halleyYear.style.left =
-          '30px';
-
-
-        halleyYear.style.top =
-          'calc(50% + 75px)';
-
-
-        halleyYear.style.color =
-          'gray';
-
-
-        halleyYear.style.fontSize =
-          '0.85rem';
-
-
-        halleyYear.style.fontStyle =
-          'italic';
-
-
-        halleyYear.style.zIndex =
-          '5';
-
-
-        leftSide.appendChild(
-          halleyYear
-        );
-
-      }
-
-
-      /* ============================================
-         WHISKEY
-      ============================================ */
-
-      else if (
-        item.id === 'whiskey'
-      ) {
-
-        leftSide.style.backgroundImage =
-          "url('image/whiskey.png')";
-
-
-        leftSide.style.backgroundSize =
-          'contain';
-
-
-        leftSide.style.backgroundRepeat =
-          'no-repeat';
-
-
-        leftSide.style.backgroundPosition =
-          'center';
-
-      }
-
-
-      showEvonToggle();
-
+    if (
+      distance < 15
+    ) {
+      return;
     }
-  );
-
-});
 
 
-/* ==================================================
-   EVON BUTTON
-================================================== */
+    lastImageX =
+      e.clientX;
 
-evonToggle.addEventListener(
-  'click',
-  resetLeftSide
+    lastImageY =
+      e.clientY;
+
+    lastImageTime =
+      now;
+
+
+    const img =
+      document.createElement(
+        "img"
+      );
+
+
+    const randomImage =
+      trailImages[
+        Math.floor(
+          Math.random() *
+          trailImages.length
+        )
+      ];
+
+
+    img.src =
+      randomImage;
+
+    img.className =
+      "trail-image";
+
+
+    img.style.left =
+      `${e.clientX}px`;
+
+    img.style.top =
+      `${e.clientY}px`;
+
+
+    img.style.transform =
+      `translate(-50%, -50%)
+       rotate(${Math.random() * 20 - 10}deg)`;
+
+
+    imageTrail.appendChild(
+      img
+    );
+
+
+    setTimeout(
+      () => {
+
+        img.remove();
+
+      },
+      1500
+    );
+
+  }
+);
+
+
+/* =========================================================
+   WORD TRAIL
+========================================================= */
+
+let lastWordX = 0;
+let lastWordY = 0;
+let lastWordTime = 0;
+
+
+document.addEventListener(
+  "mousemove",
+  (e) => {
+
+    if (
+      currentMode !== 2
+    ) {
+      return;
+    }
+
+
+    const now =
+      Date.now();
+
+
+    if (
+      now - lastWordTime <
+      90
+    ) {
+      return;
+    }
+
+
+    const distance =
+      Math.hypot(
+        e.clientX -
+          lastWordX,
+
+        e.clientY -
+          lastWordY
+      );
+
+
+    if (
+      distance < 18
+    ) {
+      return;
+    }
+
+
+    lastWordX =
+      e.clientX;
+
+    lastWordY =
+      e.clientY;
+
+    lastWordTime =
+      now;
+
+
+    const word =
+      document.createElement(
+        "span"
+      );
+
+
+    word.className =
+      "trail-word";
+
+
+    word.textContent =
+      trailWords[
+        Math.floor(
+          Math.random() *
+          trailWords.length
+        )
+      ];
+
+
+    word.style.left =
+      `${e.clientX}px`;
+
+    word.style.top =
+      `${e.clientY}px`;
+
+
+    const randomSize =
+      Math.floor(
+        Math.random() * 9
+      ) + 15;
+
+
+    const randomRotation =
+      Math.random() * 10 - 5;
+
+
+    word.style.fontSize =
+      `${randomSize}px`;
+
+
+    word.style.transform =
+      `translate(-50%, -50%)
+       rotate(${randomRotation}deg)`;
+
+
+    wordTrail.appendChild(
+      word
+    );
+
+
+    setTimeout(
+      () => {
+
+        word.remove();
+
+      },
+      1400
+    );
+
+  }
 );
