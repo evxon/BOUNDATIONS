@@ -1,161 +1,117 @@
 
 /* =========================================================
-   BOUNDARIES FOR IMAGINATION
+   BOUNDATIONS
    ========================================================= */
 
 const title = document.getElementById("title");
 const body = document.body;
-let openingScreen = document.getElementById("opening-screen");
+const floatingSpace = document.querySelector(".floating-space");
 const cards = Array.from(document.querySelectorAll(".card"));
 const imageTrail = document.getElementById("image-trail");
 const wordTrail = document.getElementById("word-trail");
 const blackTransition = document.getElementById("black-transition");
 const trailSound = document.getElementById("trailSound");
 
+const addCard = document.querySelector(".add-card");
+const customImageInput = document.getElementById("custom-image-input");
+const customRuleTitle = document.getElementById("custom-rule-title");
+const customRuleDescription = document.getElementById("custom-rule-description");
+const saveCustomCard = document.getElementById("save-custom-card");
+
+let currentMode = 3;
+let introFinished = false;
+let transitioning = false;
+let flippedCards = [];
+let customImageURL = null;
+
 /* =========================================================
-   BOUNDARY HANDLE
+   BOUNDARY SCALE HANDLES
    ========================================================= */
 
 const boundaryHandle = document.getElementById("boundary-handle");
-let boundaryScale = 1;
-let boundaryDragging = false;
-let boundaryStartY = 0;
-let boundaryStartScale = 1;
+const zoomHandle = document.getElementById("zoom-handle");
 
+let boundaryScale = 1;
 
 function applyBoundaryScale(scale) {
-boundaryScale = Math.max(0.55, Math.min(2.5, scale));
+  boundaryScale = Math.max(0.55, Math.min(2.5, scale));
+
   document.documentElement.style.setProperty(
     "--boundary-scale",
     boundaryScale
   );
 
-  if (boundaryScale < 0.995) {
-    body.classList.add("boundary-scaled");
-  } else {
-    body.classList.remove("boundary-scaled");
-  }
+  body.classList.toggle("boundary-scaled", boundaryScale < 0.995);
+
+  // Keep the + card inside the visible playground.
+  requestAnimationFrame(() => {
+    keepAddCardInsideBoundary();
+  });
 }
 
+function attachScaleHandle(handle, direction) {
+  if (!handle) return;
 
-if (boundaryHandle) {
-  boundaryHandle.addEventListener("pointerdown", event => {
+  let dragging = false;
+  let startY = 0;
+  let startScale = 1;
+
+  handle.addEventListener("pointerdown", event => {
     if (event.button !== 0) return;
 
-    boundaryDragging = true;
-    boundaryStartY = event.clientY;
-    boundaryStartScale = boundaryScale;
-    body.classList.add("boundary-dragging");
+    dragging = true;
+    startY = event.clientY;
+    startScale = boundaryScale;
+
+    body.classList.add(
+      direction === "boundary" ? "boundary-dragging" : "zoom-dragging"
+    );
 
     try {
-      boundaryHandle.setPointerCapture(event.pointerId);
+      handle.setPointerCapture(event.pointerId);
     } catch (error) {}
 
     event.preventDefault();
   });
 
-  boundaryHandle.addEventListener("pointermove", event => {
-    if (!boundaryDragging) return;
+  handle.addEventListener("pointermove", event => {
+    if (!dragging) return;
 
-    const distance = event.clientY - boundaryStartY;
-    const scaleChange = distance / window.innerHeight;
-    const newScale = boundaryStartScale - scaleChange;
+    const distance = event.clientY - startY;
 
-    applyBoundaryScale(newScale);
+    const change = direction === "boundary"
+      ? -distance / window.innerHeight
+      : distance / window.innerHeight;
+
+    applyBoundaryScale(startScale + change);
   });
 
-  function finishBoundaryDrag(event) {
-    if (!boundaryDragging) return;
+  function finish(event) {
+    if (!dragging) return;
 
-    boundaryDragging = false;
-    body.classList.remove("boundary-dragging");
+    dragging = false;
+
+    body.classList.remove(
+      direction === "boundary" ? "boundary-dragging" : "zoom-dragging"
+    );
 
     try {
-      boundaryHandle.releasePointerCapture(event.pointerId);
+      handle.releasePointerCapture(event.pointerId);
     } catch (error) {}
   }
 
-  boundaryHandle.addEventListener("pointerup", finishBoundaryDrag);
-  boundaryHandle.addEventListener("pointercancel", finishBoundaryDrag);
+  handle.addEventListener("pointerup", finish);
+  handle.addEventListener("pointercancel", finish);
 }
 
-/* =========================================================
-   BOTTOM ZOOM HANDLE
-   ========================================================= */
-
-const zoomHandle = document.getElementById("zoom-handle");
-let zoomDragging = false;
-let zoomStartY = 0;
-let zoomStartScale = 1;
+attachScaleHandle(boundaryHandle, "boundary");
+attachScaleHandle(zoomHandle, "zoom");
 
 /* =========================================================
-   APPLY ZOOM SCALE
+   OPENING SCREEN
    ========================================================= */
 
-
-function applyZoomScale(scale) {
-boundaryScale = Math.max(0.55, Math.min(2.5, scale));
-  document.documentElement.style.setProperty(
-    "--boundary-scale",
-    boundaryScale
-  );
-
-  if (boundaryScale < 0.995) {
-    body.classList.add("boundary-scaled");
-  } else {
-    body.classList.remove("boundary-scaled");
-  }
-}
-
-
-/* =========================================================
-   BOTTOM HANDLE INTERACTION
-   ========================================================= */
-
-if (zoomHandle) {
-  zoomHandle.addEventListener("pointerdown", event => {
-    if (event.button !== 0) return;
-
-    zoomDragging = true;
-    zoomStartY = event.clientY;
-    zoomStartScale = boundaryScale;
-    body.classList.add("zoom-dragging");
-
-    try {
-      zoomHandle.setPointerCapture(event.pointerId);
-    } catch (error) {}
-
-    event.preventDefault();
-  });
-
-  zoomHandle.addEventListener("pointermove", event => {
-    if (!zoomDragging) return;
-
-    const distance = zoomStartY - event.clientY;
-    const scaleChange = distance / window.innerHeight;
-    const newScale = zoomStartScale + scaleChange;
-
-    applyZoomScale(newScale);
-  });
-
-  function finishZoomDrag(event) {
-    if (!zoomDragging) return;
-
-    zoomDragging = false;
-    body.classList.remove("zoom-dragging");
-
-    try {
-      zoomHandle.releasePointerCapture(event.pointerId);
-    } catch (error) {}
-  }
-
-  zoomHandle.addEventListener("pointerup", finishZoomDrag);
-  zoomHandle.addEventListener("pointercancel", finishZoomDrag);
-}
-
-/* =========================================================
-   CREATE OPENING SCREEN
-   ========================================================= */
+let openingScreen = document.getElementById("opening-screen");
 
 if (!openingScreen) {
   openingScreen = document.createElement("div");
@@ -163,8 +119,35 @@ if (!openingScreen) {
   document.body.appendChild(openingScreen);
 }
 
+function startOpening() {
+  body.classList.remove("playground-ready");
+
+  if (title) {
+    title.classList.remove("intro-zoom");
+    title.style.display = "block";
+
+    void title.offsetWidth;
+    title.classList.add("intro-zoom");
+  }
+
+  setTimeout(() => {
+    body.classList.add("playground-ready");
+  }, 100);
+
+  setTimeout(() => {
+    openingScreen.classList.add("opening-finished");
+  }, 1400);
+
+  setTimeout(() => {
+    if (title) title.style.display = "none";
+
+    introFinished = true;
+    updateTrailMode();
+  }, 1750);
+}
+
 /* =========================================================
-   TRAIL WORDS
+   TRAIL CONTENT
    ========================================================= */
 
 const trailWords = [
@@ -181,10 +164,6 @@ const trailWords = [
   "CAN WE CHANGE IT?",
   "WHAT CAN WE MAKE?"
 ];
-
-/* =========================================================
-   TRAIL IMAGES
-   ========================================================= */
 
 const trailImages = [
   "image/one.png",
@@ -210,106 +189,18 @@ const trailImages = [
 ];
 
 /* =========================================================
-   STATE
-   ========================================================= */
-
-let currentMode = 3;
-let introFinished = false;
-let transitioning = false;
-
-/* =========================================================
-   ORDERED FLIPPED CARDS
-   ========================================================= */
-
-let flippedCards = [];
-const orderedColumns = 5;
-const orderedStartX = 7;
-const orderedStartY = 9;
-const orderedColumnGap = 16;
-const orderedRowGap = 16;
-
-
-
-
-/* =========================================================
-   ORDERED FLIPPED CARDS
-   ========================================================= */
-
-function getOrderedPosition(index) {
-  const cardGap = 28;
-
-  // ORIGINAL 20 CARDS: keep their existing positions
-  if (index < 7) {
-    // Top row
-    return [-40 + index * cardGap, -55];
-  }
-
-  if (index < 14) {
-    // Bottom row
-    return [-40 + (index - 7) * cardGap, 140];
-  }
-
-  if (index < 17) {
-    // Original left column: 3 cards
-    const sideIndex = index - 14;
-    return [-40, -5 + sideIndex * 47.5];
-  }
-
-  if (index < 20) {
-    // Original right column: 3 cards
-    const sideIndex = index - 17;
-    return [130, -5 + sideIndex * 47.5];
-  }
-
-  // EXTRA CARDS:
-  // First 4 cards on each outer edge move upward.
-  // The 5th card stays at its previous bottom position.
-
-  const extraIndex = index - 20;
-  const outerColumnGap = 47.5;
-  const outerStartY = -54;
-
-  if (extraIndex < 5) {
-    // Outer left column
-    const y = extraIndex === 4
-      ? -50 + 4 * outerColumnGap
-      : outerStartY + extraIndex * outerColumnGap;
-
-    return [-69, y];
-  }
-
-  // Outer right column
-  const rightIndex = extraIndex - 5;
-  const y = rightIndex === 4
-    ? -50 + 4 * outerColumnGap
-    : outerStartY + rightIndex * outerColumnGap;
-
-  return [159, y];
-}
-
-
-
-
-/* =========================================================
    AUDIO
    ========================================================= */
 
 let audioUnlocked = false;
+let trailSoundTimeout;
 
 function unlockAudio() {
-  if (audioUnlocked) return;
-
   audioUnlocked = true;
   document.removeEventListener("pointerdown", unlockAudio);
 }
 
 document.addEventListener("pointerdown", unlockAudio);
-
-/* =========================================================
-   TRAIL SOUND
-   ========================================================= */
-
-let trailSoundTimeout;
 
 function playTrailSound() {
   if (!trailSound || !audioUnlocked) return;
@@ -332,119 +223,113 @@ function playTrailSound() {
    ========================================================= */
 
 const positions = [
-  [7, 9],
-  [23, 6],
-  [42, 8],
-  [65, 7],
-  [81, 13],
-  [5, 30],
-  [28, 25],
-  [47, 32],
-  [70, 27],
-  [86, 34],
-  [9, 52],
-  [31, 48],
-  [52, 53],
-  [73, 49],
-  [87, 57],
-  [20, 75],
-  [57, 76],
-  [3, 68],
-  [38, 70],
-  [68, 72],
+  [7, 9], [23, 6], [42, 8], [65, 7], [81, 13],
+  [5, 30], [28, 25], [47, 32], [70, 27], [86, 34],
+  [9, 52], [31, 48], [52, 53], [73, 49], [87, 57],
+  [20, 75], [57, 76], [3, 68], [38, 70], [68, 72],
   [84, 78]
 ];
 
-/* =========================================================
-   SHUFFLE
-   ========================================================= */
-
 function shuffle(array) {
-  const shuffled = [...array];
+  const result = [...array];
 
-  for (let i = shuffled.length - 1; i > 0; i--) {
+  for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-
-    [shuffled[i], shuffled[j]] = [
-      shuffled[j],
-      shuffled[i]
-    ];
+    [result[i], result[j]] = [result[j], result[i]];
   }
 
-  return shuffled;
+  return result;
 }
 
-/* =========================================================
-   GET RANDOM POSITION
-   ========================================================= */
-
-function getRandomAvailablePosition() {
-  const occupiedPositions = flippedCards.map(
-    card => card.dataset.flippedPosition
-  );
-
-  const available = positions.filter(position => {
-    const key = `${position[0]},${position[1]}`;
-    return !occupiedPositions.includes(key);
-  });
-
-  if (available.length === 0) {
-    return positions[Math.floor(Math.random() * positions.length)];
-  }
-
-  return available[Math.floor(Math.random() * available.length)];
+function setCardPosition(card, x, y) {
+  card.style.left = `${x}vw`;
+  card.style.top = `${y}vh`;
+  card.style.setProperty("--x", `${x}vw`);
+  card.style.setProperty("--y", `${y}vh`);
 }
 
-/* =========================================================
-   PLACE FLIPPED CARDS IN ORDER
-   ========================================================= */
-
-function updateFlippedCardPositions() {
-  flippedCards.forEach((card, index) => {
-    const position = getOrderedPosition(index);
-    const x = position[0];
-    const y = position[1];
-
+function setCardMovement(card) {
+  if (
+    card.classList.contains("flipped") ||
+    card.classList.contains("dragging")
+  ) {
     card.style.animation = "none";
-    card.style.setProperty("--x", `${x}vw`);
-    card.style.setProperty("--y", `${y}vh`);
-    card.style.left = `${x}vw`;
-    card.style.top = `${y}vh`;
+    return;
+  }
+
+  const moveX = (Math.random() * 4 - 2).toFixed(2);
+  const moveY = (Math.random() * 4 - 2).toFixed(2);
+
+  card.style.setProperty("--move-x", `${moveX}vw`);
+  card.style.setProperty("--move-y", `${moveY}vh`);
+
+  const duration = 16 + Math.random() * 12;
+  const delay = Math.random() * -16;
+
+  card.style.animation = "none";
+  void card.offsetWidth;
+
+  card.style.animation =
+    `cardFloat ${duration}s cubic-bezier(0.45, 0, 0.55, 1) ${delay}s infinite`;
+}
+
+function randomizeCards() {
+  const shuffled = shuffle(positions);
+  let index = 0;
+
+  cards.forEach(card => {
+    if (card.classList.contains("flipped")) return;
+
+    const position = shuffled[index++];
+    if (!position) return;
+
+    setCardPosition(card, position[0], position[1]);
+    setCardMovement(card);
   });
 }
 
-/* =========================================================
-   ADD CARD TO FLIPPED ORDER
-   ========================================================= */
-
-function addToFlippedOrder(card) {
-  if (!flippedCards.includes(card)) {
-    flippedCards.push(card);
-  }
-
-  document.body.classList.add("cards-expanded");
-  updateFlippedCardPositions();
-}
+randomizeCards();
 
 /* =========================================================
-   REMOVE CARD FROM FLIPPED ORDER
+   FLIPPED CARD LAYOUT
    ========================================================= */
 
-function removeFromFlippedOrder(card) {
-  flippedCards = flippedCards.filter(item => item !== card);
+function getOrderedPosition(index) {
+  const cardGap = 28;
 
-  if (flippedCards.length === 0) {
-    document.body.classList.remove("cards-expanded");
+  if (index < 7) {
+    return [-40 + index * cardGap, -55];
   }
 
-  updateFlippedCardPositions();
+  if (index < 14) {
+    return [-40 + (index - 7) * cardGap, 140];
+  }
+
+  if (index < 17) {
+    return [-40, -5 + (index - 14) * 47.5];
+  }
+
+  if (index < 20) {
+    return [130, -5 + (index - 17) * 47.5];
+  }
+
+  const extraIndex = index - 20;
+  const outerColumnGap = 47.5;
+  const outerStartY = -54;
+
+  if (extraIndex < 5) {
+    return [-69, outerStartY + extraIndex * outerColumnGap];
+  }
+
+  return [
+    159,
+    outerStartY + (extraIndex - 5) * outerColumnGap
+  ];
 }
 
 function updateFlippedCardPositions() {
   flippedCards.forEach((card, index) => {
-    const position = getOrderedPosition(index);
-    const x = position[0];
-    const y = position[1];
+    const [x, y] = getOrderedPosition(index);
 
     card.style.animation = "none";
     card.style.transform = "translate(0, 0)";
@@ -456,6 +341,15 @@ function updateFlippedCardPositions() {
   });
 }
 
+function addToFlippedOrder(card) {
+  if (!flippedCards.includes(card)) {
+    flippedCards.push(card);
+  }
+
+  body.classList.add("cards-expanded");
+  updateFlippedCardPositions();
+}
+
 function removeFromFlippedOrder(card) {
   const index = flippedCards.indexOf(card);
   if (index === -1) return;
@@ -464,91 +358,91 @@ function removeFromFlippedOrder(card) {
   delete card.dataset.flippedPosition;
 
   if (flippedCards.length === 0) {
-    document.body.classList.remove("cards-expanded");
+    body.classList.remove("cards-expanded");
   }
 
   updateFlippedCardPositions();
 }
 
 /* =========================================================
-   CARD FLOATING
+   PLAYGROUND COORDINATE HELPERS
    ========================================================= */
 
-function setCardMovement(card) {
-  if (card.classList.contains("add-card") || card.classList.contains("flipped")) {
-    card.style.animation = "none";
-    return;
-  }
+// Convert screen coordinates into the playground's local coordinates.
+// This is important when the playground is scaled.
+function getPlaygroundMetrics() {
+  const rect = floatingSpace.getBoundingClientRect();
 
-  const moveX = (Math.random() * 8 - 4).toFixed(2);
-  const moveY = (Math.random() * 10 - 5).toFixed(2);
+  const scaleX = floatingSpace.offsetWidth
+    ? rect.width / floatingSpace.offsetWidth
+    : 1;
 
-  card.style.setProperty("--move-x", `${moveX}vw`);
-  card.style.setProperty("--move-y", `${moveY}vh`);
+  const scaleY = floatingSpace.offsetHeight
+    ? rect.height / floatingSpace.offsetHeight
+    : 1;
 
-  const duration = 16 + Math.random() * 12;
-  const delay = Math.random() * -16;
+  return {
+    rect,
+    scaleX: scaleX || 1,
+    scaleY: scaleY || 1,
+    width: floatingSpace.offsetWidth,
+    height: floatingSpace.offsetHeight
+  };
+}
+
+function clampCardInsidePlayground(card, localX, localY) {
+  const metrics = getPlaygroundMetrics();
+  const padding = 12;
+
+  const cardWidth = card.offsetWidth;
+  const cardHeight = card.offsetHeight;
+
+  const maxX = Math.max(
+    padding,
+    metrics.width - cardWidth - padding
+  );
+
+  const maxY = Math.max(
+    padding,
+    metrics.height - cardHeight - padding
+  );
+
+  const x = Math.max(padding, Math.min(localX, maxX));
+  const y = Math.max(padding, Math.min(localY, maxY));
 
   card.style.animation = "none";
-  void card.offsetWidth;
-  card.style.animation = `cardFloat ${duration}s cubic-bezier(0.45, 0, 0.55, 1) ${delay}s infinite`;
+  card.style.transform = "translate(0, 0)";
+  card.style.left = `${x}px`;
+  card.style.top = `${y}px`;
+
+  return { x, y };
 }
 
-/* =========================================================
-   RANDOMIZE CARDS
-   ========================================================= */
+function keepAddCardInsideBoundary() {
+  if (!addCard || !floatingSpace) return;
 
-function randomizeCards() {
-  const shuffledPositions = shuffle(positions);
-  let normalPositionIndex = 0;
+  const metrics = getPlaygroundMetrics();
+  const cardRect = addCard.getBoundingClientRect();
 
-  cards.forEach(card => {
-    if (card.classList.contains("flipped")) return;
+  // Work out the card's current location relative to the scaled box.
+  const localX = (cardRect.left - metrics.rect.left) / metrics.scaleX;
+  const localY = (cardRect.top - metrics.rect.top) / metrics.scaleY;
 
-    const [x, y] = shuffledPositions[normalPositionIndex];
-    normalPositionIndex++;
+  clampCardInsidePlayground(addCard, localX, localY);
+}
 
-    card.style.setProperty("--x", `${x}vw`);
-    card.style.setProperty("--y", `${y}vh`);
-    setCardMovement(card);
+function scheduleAddCardPositionFix() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      keepAddCardInsideBoundary();
+    });
   });
+
+  setTimeout(keepAddCardInsideBoundary, 750);
 }
 
-randomizeCards();
-
 /* =========================================================
-   OPENING TRANSFORMATION
-   ========================================================= */
-
-
-function startOpening() {
-  body.classList.remove("playground-ready");
-  title.classList.remove("intro-zoom");
-  title.style.display = "block";
-
-  void title.offsetWidth;
-  title.classList.add("intro-zoom");
-
-  setTimeout(() => {
-    body.classList.add("playground-ready");
-  }, 100);
-
-  setTimeout(() => {
-    openingScreen.classList.add("opening-finished");
-  }, 1400);
-
-  setTimeout(() => {
-    title.style.display = "none";
-    introFinished = true;
-    updateTrailMode();
-  }, 1750);
-}
-
-
-startOpening();
-
-/* =========================================================
-   CARD INTERACTION
+   REGULAR CARD DRAGGING AND FLIPPING
    ========================================================= */
 
 function attachCardInteraction(card) {
@@ -559,32 +453,26 @@ function attachCardInteraction(card) {
   let cardStartX = 0;
   let cardStartY = 0;
   let moved = false;
-  let lastX = 0;
-  let lastY = 0;
-  let velocityX = 0;
-  let velocityY = 0;
-  let lastTime = 0;
 
   card.addEventListener("pointerdown", event => {
     if (event.button !== 0) return;
     if (event.target.closest("input, textarea, button")) return;
 
-    moved = false;
+    const metrics = getPlaygroundMetrics();
+    const rect = card.getBoundingClientRect();
+
     pointerStartX = event.clientX;
     pointerStartY = event.clientY;
 
-    const rect = card.getBoundingClientRect();
-    cardStartX = rect.left;
-    cardStartY = rect.top;
+    cardStartX = (rect.left - metrics.rect.left) / metrics.scaleX;
+    cardStartY = (rect.top - metrics.rect.top) / metrics.scaleY;
 
-    lastX = event.clientX;
-    lastY = event.clientY;
-    lastTime = performance.now();
+    moved = false;
 
     card.style.animation = "none";
-    card.style.left = `${cardStartX / boundaryScale}px`;
-    card.style.top = `${cardStartY / boundaryScale}px`;
     card.style.transform = "translate(0, 0)";
+    card.style.left = `${cardStartX}px`;
+    card.style.top = `${cardStartY}px`;
     card.classList.add("dragging");
 
     try {
@@ -595,39 +483,20 @@ function attachCardInteraction(card) {
   card.addEventListener("pointermove", event => {
     if (!card.classList.contains("dragging")) return;
 
-    const dx = (event.clientX - pointerStartX) / boundaryScale;
-    const dy = (event.clientY - pointerStartY) / boundaryScale;
+    const metrics = getPlaygroundMetrics();
 
-    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
-      moved = true;
-    }
+    const dx = (event.clientX - pointerStartX) / metrics.scaleX;
+    const dy = (event.clientY - pointerStartY) / metrics.scaleY;
 
-    const now = performance.now();
-    const dt = Math.max(now - lastTime, 1);
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
 
-    velocityX = (event.clientX - lastX) / dt / boundaryScale;
-    velocityY = (event.clientY - lastY) / dt / boundaryScale;
+    const newX = cardStartX + dx;
+    const newY = cardStartY + dy;
 
-    lastX = event.clientX;
-    lastY = event.clientY;
-    lastTime = now;
-
-    let newX = cardStartX / boundaryScale + dx;
-    let newY = cardStartY / boundaryScale + dy;
-
-    const cardWidth = card.offsetWidth;
-    const cardHeight = card.offsetHeight;
-    const maxX = window.innerWidth - cardWidth;
-    const maxY = window.innerHeight - cardHeight;
-
-    newX = Math.max(0, Math.min(newX, maxX));
-    newY = Math.max(0, Math.min(newY, maxY));
-
-    card.style.left = `${newX}px`;
-    card.style.top = `${newY}px`;
+    clampCardInsidePlayground(card, newX, newY);
   });
 
-  card.addEventListener("pointerup", event => {
+  function finishCardDrag(event) {
     if (!card.classList.contains("dragging")) return;
 
     card.classList.remove("dragging");
@@ -639,9 +508,7 @@ function attachCardInteraction(card) {
     if (!moved) {
       body.classList.add("trail-paused");
 
-      const isCurrentlyFlipped = card.classList.contains("flipped");
-
-      if (!isCurrentlyFlipped) {
+      if (!card.classList.contains("flipped")) {
         card.classList.add("flipped");
         card.style.animation = "none";
         card.style.transform = "translate(0, 0)";
@@ -650,21 +517,13 @@ function attachCardInteraction(card) {
         card.classList.remove("flipped");
         removeFromFlippedOrder(card);
 
-        card.style.animation = "none";
-        card.style.transform = "translate(0, 0)";
+        const position = getRandomAvailablePosition();
+        setCardPosition(card, position[0], position[1]);
 
-        const randomPosition = getRandomAvailablePosition();
-        const [randomX, randomY] = randomPosition;
-
-        card.style.left = `${randomX}vw`;
-        card.style.top = `${randomY}vh`;
-        card.style.setProperty("--x", `${randomX}vw`);
-        card.style.setProperty("--y", `${randomY}vh`);
-
-        setTimeout(() => {
-          setCardMovement(card);
-        }, 50);
+        setTimeout(() => setCardMovement(card), 50);
       }
+
+      scheduleAddCardPositionFix();
 
       setTimeout(() => {
         updateTrailMode();
@@ -674,55 +533,40 @@ function attachCardInteraction(card) {
       return;
     }
 
-    const rect = card.getBoundingClientRect();
-
-    let finalX = rect.left / boundaryScale + velocityX * 80;
-    let finalY = rect.top / boundaryScale + velocityY * 80;
-
-    const maxX = window.innerWidth - rect.width / boundaryScale;
-    const maxY = window.innerHeight - rect.height / boundaryScale;
-
-    finalX = Math.max(0, Math.min(finalX, maxX));
-    finalY = Math.max(60, Math.min(finalY, maxY));
-
-    card.style.left = `${finalX}px`;
-    card.style.top = `${finalY}px`;
-    card.style.transform = "translate(0, 0)";
-
     if (!card.classList.contains("flipped")) {
-      setTimeout(() => {
-        setCardMovement(card);
-      }, 50);
+      setTimeout(() => setCardMovement(card), 50);
     }
-  });
+  }
 
-  card.addEventListener("pointercancel", event => {
-    if (!card.classList.contains("dragging")) return;
-
-    card.classList.remove("dragging");
-
-    try {
-      card.releasePointerCapture(event.pointerId);
-    } catch (error) {}
-
-    card.style.transform = "translate(0, 0)";
-
-    if (!card.classList.contains("flipped")) {
-      setCardMovement(card);
-    }
-  });
+  card.addEventListener("pointerup", finishCardDrag);
+  card.addEventListener("pointercancel", finishCardDrag);
 }
 
-/* =========================================================
-   ATTACH CARD INTERACTION
-   ========================================================= */
+function getRandomAvailablePosition() {
+  const occupied = new Set();
 
-cards.forEach(card => {
-  attachCardInteraction(card);
-});
+  document.querySelectorAll(".card:not(.flipped)").forEach(card => {
+    if (card === addCard) return;
+
+    const x = card.style.getPropertyValue("--x");
+    const y = card.style.getPropertyValue("--y");
+
+    if (x && y) occupied.add(`${x},${y}`);
+  });
+
+  const available = positions.filter(position => {
+    return !occupied.has(`${position[0]}vw,${position[1]}vh`);
+  });
+
+  const list = available.length ? available : positions;
+
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+cards.forEach(attachCardInteraction);
 
 /* =========================================================
-   ADD CARD DRAG
+   ADD CARD DRAGGING
    ========================================================= */
 
 function attachAddCardDrag(card) {
@@ -739,12 +583,14 @@ function attachAddCardDrag(card) {
     if (event.button !== 0) return;
     if (event.target.closest("input, textarea, button")) return;
 
+    const metrics = getPlaygroundMetrics();
     const rect = card.getBoundingClientRect();
 
     pointerStartX = event.clientX;
     pointerStartY = event.clientY;
-    cardStartX = rect.left / boundaryScale;
-    cardStartY = rect.top / boundaryScale;
+    cardStartX = (rect.left - metrics.rect.left) / metrics.scaleX;
+    cardStartY = (rect.top - metrics.rect.top) / metrics.scaleY;
+
     moved = false;
     dragging = true;
 
@@ -762,32 +608,22 @@ function attachAddCardDrag(card) {
   card.addEventListener("pointermove", event => {
     if (!dragging) return;
 
-    const dx = (event.clientX - pointerStartX) / boundaryScale;
-    const dy = (event.clientY - pointerStartY) / boundaryScale;
+    const metrics = getPlaygroundMetrics();
 
-    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
-      moved = true;
-    }
+    const dx = (event.clientX - pointerStartX) / metrics.scaleX;
+    const dy = (event.clientY - pointerStartY) / metrics.scaleY;
 
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
     if (!moved) return;
 
-    const cardWidth = card.offsetWidth;
-    const cardHeight = card.offsetHeight;
-
-    let newX = cardStartX + dx;
-    let newY = cardStartY + dy;
-
-    const maxX = window.innerWidth - cardWidth;
-    const maxY = window.innerHeight - cardHeight;
-
-    newX = Math.max(0, Math.min(newX, maxX));
-    newY = Math.max(0, Math.min(newY, maxY));
-
-    card.style.left = `${newX}px`;
-    card.style.top = `${newY}px`;
+    clampCardInsidePlayground(
+      card,
+      cardStartX + dx,
+      cardStartY + dy
+    );
   });
 
-  function finishAddCardDrag(event) {
+  function finish(event) {
     if (!dragging) return;
 
     dragging = false;
@@ -796,17 +632,19 @@ function attachAddCardDrag(card) {
     try {
       card.releasePointerCapture(event.pointerId);
     } catch (error) {}
+
+    if (card.classList.contains("flipped")) {
+      keepAddCardInsideBoundary();
+    } else if (moved) {
+      setCardMovement(card);
+    }
   }
 
-  card.addEventListener("pointerup", finishAddCardDrag);
-  card.addEventListener("pointercancel", finishAddCardDrag);
+  card.addEventListener("pointerup", finish);
+  card.addEventListener("pointercancel", finish);
 }
 
-/* =========================================================
-   ENABLE ADD CARD DRAGGING
-   ========================================================= */
-
-attachAddCardDrag(document.querySelector(".add-card"));
+attachAddCardDrag(addCard);
 
 /* =========================================================
    TRAIL MODE
@@ -819,8 +657,8 @@ function updateTrailMode() {
     document.querySelectorAll(".card:not(.add-card)")
   );
 
-  const flippedCount = regularCards.filter(
-    card => card.classList.contains("flipped")
+  const flippedCount = regularCards.filter(card =>
+    card.classList.contains("flipped")
   ).length;
 
   const photoCount = regularCards.length - flippedCount;
@@ -837,18 +675,13 @@ function updateTrailMode() {
 }
 
 /* =========================================================
-   TRAIL BOUNDARY CHECK
-   ========================================================= */
-
-/* =========================================================
-   TRAIL BOUNDARY CHECK
+   TRAIL BOUNDARY
    ========================================================= */
 
 function isCursorInsidePlayground(event) {
-  const playground = document.querySelector(".floating-space");
-  if (!playground) return false;
+  if (!floatingSpace) return false;
 
-  const rect = playground.getBoundingClientRect();
+  const rect = floatingSpace.getBoundingClientRect();
 
   return (
     event.clientX >= rect.left &&
@@ -857,10 +690,6 @@ function isCursorInsidePlayground(event) {
     event.clientY <= rect.bottom
   );
 }
-
-/* =========================================================
-   IMAGE TRAIL
-   ========================================================= */
 
 /* =========================================================
    IMAGE TRAIL
@@ -875,11 +704,9 @@ document.addEventListener("pointermove", event => {
   if (!body.classList.contains("show-image-trail")) return;
   if (body.classList.contains("trail-paused")) return;
   if (!isCursorInsidePlayground(event)) return;
+  if (!imageTrail) return;
 
-  const playground = document.querySelector(".floating-space");
-  if (!playground) return;
-
-  const rect = playground.getBoundingClientRect();
+  const rect = floatingSpace.getBoundingClientRect();
 
   const imageSize = window.matchMedia("(max-width: 700px)").matches
     ? 75
@@ -887,7 +714,6 @@ document.addEventListener("pointermove", event => {
 
   const radius = imageSize / 2;
 
-  // Keep the entire circular image inside the rectangle.
   if (rect.width < imageSize || rect.height < imageSize) return;
 
   const x = Math.max(
@@ -901,7 +727,6 @@ document.addEventListener("pointermove", event => {
   );
 
   const now = performance.now();
-
   const distance = Math.hypot(
     event.clientX - lastImageX,
     event.clientY - lastImageY
@@ -924,17 +749,11 @@ document.addEventListener("pointermove", event => {
   img.style.top = `${y}px`;
 
   imageTrail.appendChild(img);
-
   playTrailSound();
 
-  setTimeout(() => {
-    img.remove();
-  }, 800);
+  setTimeout(() => img.remove(), 800);
 });
 
-/* =========================================================
-   WORD TRAIL
-   ========================================================= */
 /* =========================================================
    WORD TRAIL
    ========================================================= */
@@ -948,12 +767,9 @@ document.addEventListener("pointermove", event => {
   if (!body.classList.contains("show-word-trail")) return;
   if (body.classList.contains("trail-paused")) return;
   if (!isCursorInsidePlayground(event)) return;
+  if (!wordTrail) return;
 
-  const playground = document.querySelector(".floating-space");
-  if (!playground) return;
-
-  const rect = playground.getBoundingClientRect();
-
+  const rect = floatingSpace.getBoundingClientRect();
   const now = performance.now();
 
   const distance = Math.hypot(
@@ -969,32 +785,24 @@ document.addEventListener("pointermove", event => {
 
   const word = document.createElement("div");
   word.className = "trail-word";
-
   word.textContent = trailWords[
     Math.floor(Math.random() * trailWords.length)
   ];
 
-  // Measure the complete word before positioning it.
   word.style.left = "0px";
   word.style.top = "0px";
 
   wordTrail.appendChild(word);
 
   const wordRect = word.getBoundingClientRect();
-
   const halfWidth = wordRect.width / 2;
   const halfHeight = wordRect.height / 2;
 
-  // Do not create words if the rectangle is too small.
-  if (
-    rect.width < wordRect.width ||
-    rect.height < wordRect.height
-  ) {
+  if (rect.width < wordRect.width || rect.height < wordRect.height) {
     word.remove();
     return;
   }
 
-  // Keep every edge of the word inside the rectangle.
   const x = Math.max(
     rect.left + halfWidth,
     Math.min(event.clientX, rect.right - halfWidth)
@@ -1009,39 +817,27 @@ document.addEventListener("pointermove", event => {
   word.style.top = `${y}px`;
 
   playTrailSound();
-
-  setTimeout(() => {
-    word.remove();
-  }, 650);
+  setTimeout(() => word.remove(), 650);
 });
 
 /* =========================================================
-   ADD YOUR OWN CARD
-   ========================================================= */
-
-const addCard = document.querySelector(".add-card");
-const customImageInput = document.getElementById("custom-image-input");
-const customRuleTitle = document.getElementById("custom-rule-title");
-const customRuleDescription = document.getElementById("custom-rule-description");
-const saveCustomCard = document.getElementById("save-custom-card");
-
-let customImageURL = null;
-
-/* =========================================================
-   OPEN IMAGE UPLOAD
+   OPEN ADD CARD / IMAGE UPLOAD
    ========================================================= */
 
 if (addCard && customImageInput) {
   addCard.addEventListener("click", event => {
     if (event.target.closest("input, textarea, button")) return;
+    if (addCard.classList.contains("dragging")) return;
 
     if (!addCard.classList.contains("flipped")) {
       if (addCard.classList.contains("custom-image-ready")) {
         body.classList.add("trail-paused");
         addCard.classList.add("flipped");
 
+        scheduleAddCardPositionFix();
+
         setTimeout(() => {
-          if (customRuleTitle) customRuleTitle.focus();
+          customRuleTitle?.focus();
         }, 750);
       } else {
         body.classList.add("trail-paused");
@@ -1050,10 +846,6 @@ if (addCard && customImageInput) {
     }
   });
 }
-
-/* =========================================================
-   CUSTOM IMAGE UPLOAD
-   ========================================================= */
 
 if (customImageInput && addCard) {
   customImageInput.addEventListener("change", event => {
@@ -1081,14 +873,16 @@ if (customImageInput && addCard) {
     addCard.classList.add("flipped");
     body.classList.add("trail-paused");
 
+    scheduleAddCardPositionFix();
+
     setTimeout(() => {
-      if (customRuleTitle) customRuleTitle.focus();
+      customRuleTitle?.focus();
     }, 750);
   });
 }
 
 /* =========================================================
-   SAVE CUSTOM CARD
+   SAVE CUSTOM RULE
    ========================================================= */
 
 if (saveCustomCard) {
@@ -1096,13 +890,8 @@ if (saveCustomCard) {
     event.preventDefault();
     event.stopPropagation();
 
-    const ruleTitle = customRuleTitle
-      ? customRuleTitle.value.trim()
-      : "";
-
-    const ruleDescription = customRuleDescription
-      ? customRuleDescription.value.trim()
-      : "";
+    const ruleTitle = customRuleTitle?.value.trim() || "";
+    const ruleDescription = customRuleDescription?.value.trim() || "";
 
     if (!customImageURL || !ruleTitle) return;
 
@@ -1142,6 +931,10 @@ function resetAddCard() {
   addCard.classList.remove("flipped");
   addCard.style.animation = "none";
   addCard.style.transform = "translate(0, 0)";
+
+  // Put the + card back inside the playground even if
+  // the original cards are all flipped.
+  scheduleAddCardPositionFix();
 }
 
 /* =========================================================
@@ -1153,69 +946,68 @@ function createCustomCard(imageURL, ruleTitle, ruleDescription) {
 
   card.className = "card custom-card-entering";
 
-
-card.innerHTML = `
-  <div class="card-inner">
-    <div class="card-front">
-      <img src="${imageURL}" alt="Custom rule">
+  card.innerHTML = `
+    <div class="card-inner">
+      <div class="card-front">
+        <img src="${imageURL}" alt="Custom rule">
+      </div>
+      <div class="card-back">
+        <h2>${escapeHTML(ruleTitle)}</h2>
+        <p>${escapeHTML(ruleDescription)}</p>
+      </div>
     </div>
-    <div class="card-back">
-      <h2>${escapeHTML(ruleTitle)}</h2>
-      <p>${escapeHTML(ruleDescription)}</p>
-    </div>
-  </div>
-`;
-
+  `;
 
   if (addCard) {
     addCard.parentNode.insertBefore(card, addCard);
-  }
-
-  const occupiedNormalPositions = Array.from(
-    document.querySelectorAll(".card:not(.add-card):not(.flipped)")
-  ).map(card => {
-    const x = card.style.getPropertyValue("--x");
-    const y = card.style.getPropertyValue("--y");
-    return `${x},${y}`;
-  });
-
-  const availableDestinations = positions.filter(position => {
-    const key = `${position[0]}vw,${position[1]}vh`;
-    return !occupiedNormalPositions.includes(key);
-  });
-
-  let destination;
-
-  if (availableDestinations.length > 0) {
-    destination = availableDestinations[
-      Math.floor(Math.random() * availableDestinations.length)
-    ];
   } else {
-    destination = positions[
-      Math.floor(Math.random() * positions.length)
-    ];
+    floatingSpace.appendChild(card);
   }
 
-  if (addCard) {
-    const addRect = addCard.getBoundingClientRect();
-    const startX = addRect.left / boundaryScale;
-    const startY = addRect.top / boundaryScale;
+  // IMPORTANT:
+  // Choose a destination in the playground's local pixel
+  // coordinates. Do not use vw/vh here because the playground
+  // may be scaled when all the original cards are flipped.
+  const metrics = getPlaygroundMetrics();
+  const padding = 12;
 
-    card.style.left = `${startX}px`;
-    card.style.top = `${startY}px`;
-  } else {
-    card.style.left = `${destination[0]}vw`;
-    card.style.top = `${destination[1]}vh`;
-  }
+  const cardWidth = card.offsetWidth || 160;
+  const cardHeight = card.offsetHeight || 160;
 
-  card.style.transform = "translate(0, 0)";
+  const maxX = Math.max(
+    padding,
+    metrics.width - cardWidth - padding
+  );
+
+  const maxY = Math.max(
+    padding,
+    metrics.height - cardHeight - padding
+  );
+
+  const destinationX =
+    padding + Math.random() * Math.max(0, maxX - padding);
+
+  const destinationY =
+    padding + Math.random() * Math.max(0, maxY - padding);
+
+  // Start at the current + card position, measured relative
+  // to the playground rather than the browser window.
+  const addRect = addCard.getBoundingClientRect();
+
+  const startX = (addRect.left - metrics.rect.left) / metrics.scaleX;
+  const startY = (addRect.top - metrics.rect.top) / metrics.scaleY;
+
   card.style.animation = "none";
-  card.classList.remove("flipped");
+  card.style.transform = "translate(0, 0)";
+  card.style.left = `${startX}px`;
+  card.style.top = `${startY}px`;
 
+  // Animate into its destination, which is guaranteed to be
+  // within the playground's local bounds.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      card.style.left = `${destination[0]}vw`;
-      card.style.top = `${destination[1]}vh`;
+      card.style.left = `${destinationX}px`;
+      card.style.top = `${destinationY}px`;
     });
   });
 
@@ -1238,3 +1030,13 @@ function escapeHTML(value) {
   div.textContent = value;
   return div.innerHTML;
 }
+
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
+
+startOpening();
+
+window.addEventListener("resize", () => {
+  keepAddCardInsideBoundary();
+});
