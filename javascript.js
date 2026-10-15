@@ -1,129 +1,171 @@
-const title = document.querySelector("#title");
+
+/* =========================================================
+   BOUNDARIES FOR IMAGINATION
+   ========================================================= */
+
+const title = document.getElementById("title");
 const body = document.body;
-const cards = document.querySelectorAll(".card");
-
-const imageTrail = document.querySelector("#image-trail");
-const wordTrail = document.querySelector("#word-trail");
-const blackTransition = document.querySelector("#black-transition");
-
-
-/* =========================================================
-   MUSIC
-========================================================= */
-
-const trailSound =
-  document.querySelector("#trailSound");
-
-trailSound.volume = 0.5;
-
-let audioUnlocked = false;
-let soundStopTimer = null;
-
+let openingScreen = document.getElementById("opening-screen");
+const cards = Array.from(document.querySelectorAll(".card"));
+const imageTrail = document.getElementById("image-trail");
+const wordTrail = document.getElementById("word-trail");
+const blackTransition = document.getElementById("black-transition");
+const trailSound = document.getElementById("trailSound");
 
 /* =========================================================
-   UNLOCK AUDIO
-========================================================= */
+   BOUNDARY HANDLE
+   ========================================================= */
 
-document.addEventListener(
-  "click",
-  () => {
-
-    if (audioUnlocked) {
-      return;
-    }
-
-    trailSound.muted = true;
-
-    trailSound.play()
-      .then(() => {
-
-        trailSound.pause();
-
-        trailSound.currentTime = 0;
-
-        trailSound.muted = false;
-
-        audioUnlocked = true;
-
-      })
-      .catch(() => {
-
-        trailSound.muted = false;
-
-      });
-
-  },
-  { once: true }
-);
+const boundaryHandle = document.getElementById("boundary-handle");
+let boundaryScale = 1;
+let boundaryDragging = false;
+let boundaryStartY = 0;
+let boundaryStartScale = 1;
 
 
-/* =========================================================
-   START MUSIC
-========================================================= */
+function applyBoundaryScale(scale) {
+boundaryScale = Math.max(0.55, Math.min(2.5, scale));
+  document.documentElement.style.setProperty(
+    "--boundary-scale",
+    boundaryScale
+  );
 
-function startTrailSound() {
+  if (boundaryScale < 0.995) {
+    body.classList.add("boundary-scaled");
+  } else {
+    body.classList.remove("boundary-scaled");
+  }
+}
 
-  if (!audioUnlocked) {
-    return;
+
+if (boundaryHandle) {
+  boundaryHandle.addEventListener("pointerdown", event => {
+    if (event.button !== 0) return;
+
+    boundaryDragging = true;
+    boundaryStartY = event.clientY;
+    boundaryStartScale = boundaryScale;
+    body.classList.add("boundary-dragging");
+
+    try {
+      boundaryHandle.setPointerCapture(event.pointerId);
+    } catch (error) {}
+
+    event.preventDefault();
+  });
+
+  boundaryHandle.addEventListener("pointermove", event => {
+    if (!boundaryDragging) return;
+
+    const distance = event.clientY - boundaryStartY;
+    const scaleChange = distance / window.innerHeight;
+    const newScale = boundaryStartScale - scaleChange;
+
+    applyBoundaryScale(newScale);
+  });
+
+  function finishBoundaryDrag(event) {
+    if (!boundaryDragging) return;
+
+    boundaryDragging = false;
+    body.classList.remove("boundary-dragging");
+
+    try {
+      boundaryHandle.releasePointerCapture(event.pointerId);
+    } catch (error) {}
   }
 
-  clearTimeout(soundStopTimer);
+  boundaryHandle.addEventListener("pointerup", finishBoundaryDrag);
+  boundaryHandle.addEventListener("pointercancel", finishBoundaryDrag);
+}
 
-  if (trailSound.paused) {
+/* =========================================================
+   BOTTOM ZOOM HANDLE
+   ========================================================= */
 
-    trailSound.play()
-      .catch(() => {});
+const zoomHandle = document.getElementById("zoom-handle");
+let zoomDragging = false;
+let zoomStartY = 0;
+let zoomStartScale = 1;
 
+/* =========================================================
+   APPLY ZOOM SCALE
+   ========================================================= */
+
+
+function applyZoomScale(scale) {
+boundaryScale = Math.max(0.55, Math.min(2.5, scale));
+  document.documentElement.style.setProperty(
+    "--boundary-scale",
+    boundaryScale
+  );
+
+  if (boundaryScale < 0.995) {
+    body.classList.add("boundary-scaled");
+  } else {
+    body.classList.remove("boundary-scaled");
+  }
+}
+
+
+/* =========================================================
+   BOTTOM HANDLE INTERACTION
+   ========================================================= */
+
+if (zoomHandle) {
+  zoomHandle.addEventListener("pointerdown", event => {
+    if (event.button !== 0) return;
+
+    zoomDragging = true;
+    zoomStartY = event.clientY;
+    zoomStartScale = boundaryScale;
+    body.classList.add("zoom-dragging");
+
+    try {
+      zoomHandle.setPointerCapture(event.pointerId);
+    } catch (error) {}
+
+    event.preventDefault();
+  });
+
+  zoomHandle.addEventListener("pointermove", event => {
+    if (!zoomDragging) return;
+
+    const distance = zoomStartY - event.clientY;
+    const scaleChange = distance / window.innerHeight;
+    const newScale = zoomStartScale + scaleChange;
+
+    applyZoomScale(newScale);
+  });
+
+  function finishZoomDrag(event) {
+    if (!zoomDragging) return;
+
+    zoomDragging = false;
+    body.classList.remove("zoom-dragging");
+
+    try {
+      zoomHandle.releasePointerCapture(event.pointerId);
+    } catch (error) {}
   }
 
+  zoomHandle.addEventListener("pointerup", finishZoomDrag);
+  zoomHandle.addEventListener("pointercancel", finishZoomDrag);
 }
 
-
 /* =========================================================
-   STOP MUSIC WHEN MOUSE STOPS
-========================================================= */
+   CREATE OPENING SCREEN
+   ========================================================= */
 
-function stopTrailSound() {
-
-  clearTimeout(soundStopTimer);
-
-  soundStopTimer =
-    setTimeout(
-      () => {
-
-        trailSound.pause();
-
-      },
-      150
-    );
-
+if (!openingScreen) {
+  openingScreen = document.createElement("div");
+  openingScreen.id = "opening-screen";
+  document.body.appendChild(openingScreen);
 }
 
-
 /* =========================================================
-   STOP MUSIC COMPLETELY
-========================================================= */
-
-function stopTrailSoundCompletely() {
-
-  clearTimeout(soundStopTimer);
-
-  trailSound.pause();
-
-}
-
-
-/* =========================================================
-   MODE
-========================================================= */
-
-let currentMode = 1;
-let transitioning = false;
-
-
-/* =========================================================
-   WORD TRAIL
-========================================================= */
+   TRAIL WORDS
+   ========================================================= */
 
 const trailWords = [
   "WHAT IF?",
@@ -140,10 +182,9 @@ const trailWords = [
   "WHAT CAN WE MAKE?"
 ];
 
-
 /* =========================================================
-   IMAGE TRAIL
-========================================================= */
+   TRAIL IMAGES
+   ========================================================= */
 
 const trailImages = [
   "image/one.png",
@@ -161,1701 +202,1039 @@ const trailImages = [
   "image/thirteen.png",
   "image/fourteen.png",
   "image/fifteen.png",
-  "image/sixteen.png"
+  "image/sixteen.png",
+  "image/seventeen.png",
+  "image/eighteen.png",
+  "image/nineteen.png",
+  "image/twenty.png"
 ];
 
+/* =========================================================
+   STATE
+   ========================================================= */
+
+let currentMode = 3;
+let introFinished = false;
+let transitioning = false;
+
+/* =========================================================
+   ORDERED FLIPPED CARDS
+   ========================================================= */
+
+let flippedCards = [];
+const orderedColumns = 5;
+const orderedStartX = 7;
+const orderedStartY = 9;
+const orderedColumnGap = 16;
+const orderedRowGap = 16;
+
+
+
+
+/* =========================================================
+   ORDERED FLIPPED CARDS
+   ========================================================= */
+
+function getOrderedPosition(index) {
+  const cardGap = 28;
+
+  // ORIGINAL 20 CARDS: keep their existing positions
+  if (index < 7) {
+    // Top row
+    return [-40 + index * cardGap, -55];
+  }
+
+  if (index < 14) {
+    // Bottom row
+    return [-40 + (index - 7) * cardGap, 140];
+  }
+
+  if (index < 17) {
+    // Original left column: 3 cards
+    const sideIndex = index - 14;
+    return [-40, -5 + sideIndex * 47.5];
+  }
+
+  if (index < 20) {
+    // Original right column: 3 cards
+    const sideIndex = index - 17;
+    return [130, -5 + sideIndex * 47.5];
+  }
+
+  // EXTRA CARDS:
+  // First 4 cards on each outer edge move upward.
+  // The 5th card stays at its previous bottom position.
+
+  const extraIndex = index - 20;
+  const outerColumnGap = 47.5;
+  const outerStartY = -54;
+
+  if (extraIndex < 5) {
+    // Outer left column
+    const y = extraIndex === 4
+      ? -50 + 4 * outerColumnGap
+      : outerStartY + extraIndex * outerColumnGap;
+
+    return [-69, y];
+  }
+
+  // Outer right column
+  const rightIndex = extraIndex - 5;
+  const y = rightIndex === 4
+    ? -50 + 4 * outerColumnGap
+    : outerStartY + rightIndex * outerColumnGap;
+
+  return [159, y];
+}
+
+
+
+
+/* =========================================================
+   AUDIO
+   ========================================================= */
+
+let audioUnlocked = false;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+
+  audioUnlocked = true;
+  document.removeEventListener("pointerdown", unlockAudio);
+}
+
+document.addEventListener("pointerdown", unlockAudio);
+
+/* =========================================================
+   TRAIL SOUND
+   ========================================================= */
+
+let trailSoundTimeout;
+
+function playTrailSound() {
+  if (!trailSound || !audioUnlocked) return;
+
+  trailSound.volume = 0.18;
+
+  if (trailSound.paused) {
+    trailSound.play().catch(() => {});
+  }
+
+  clearTimeout(trailSoundTimeout);
+
+  trailSoundTimeout = setTimeout(() => {
+    trailSound.pause();
+  }, 180);
+}
 
 /* =========================================================
    CARD POSITIONS
-========================================================= */
+   ========================================================= */
 
 const positions = [
-  [6, 10],
-  [20, 8],
-  [36, 11],
-  [52, 8],
-  [68, 11],
-  [80, 15],
-
-  [5, 37],
-  [18, 51],
-
-  [72, 37],
-  [80, 52],
-
-  [7, 70],
-  [22, 79],
-  [37, 73],
-  [53, 80],
-  [68, 71],
-  [79, 64],
-
-  [84, 82]
+  [7, 9],
+  [23, 6],
+  [42, 8],
+  [65, 7],
+  [81, 13],
+  [5, 30],
+  [28, 25],
+  [47, 32],
+  [70, 27],
+  [86, 34],
+  [9, 52],
+  [31, 48],
+  [52, 53],
+  [73, 49],
+  [87, 57],
+  [20, 75],
+  [57, 76],
+  [3, 68],
+  [38, 70],
+  [68, 72],
+  [84, 78]
 ];
-
 
 /* =========================================================
    SHUFFLE
-========================================================= */
+   ========================================================= */
 
 function shuffle(array) {
-
   const shuffled = [...array];
 
-  for (
-    let i = shuffled.length - 1;
-    i > 0;
-    i--
-  ) {
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
 
-    const j =
-      Math.floor(
-        Math.random() * (i + 1)
-      );
-
-    [
-      shuffled[i],
-      shuffled[j]
-    ] = [
+    [shuffled[i], shuffled[j]] = [
       shuffled[j],
       shuffled[i]
     ];
-
   }
 
   return shuffled;
 }
 
+/* =========================================================
+   GET RANDOM POSITION
+   ========================================================= */
+
+function getRandomAvailablePosition() {
+  const occupiedPositions = flippedCards.map(
+    card => card.dataset.flippedPosition
+  );
+
+  const available = positions.filter(position => {
+    const key = `${position[0]},${position[1]}`;
+    return !occupiedPositions.includes(key);
+  });
+
+  if (available.length === 0) {
+    return positions[Math.floor(Math.random() * positions.length)];
+  }
+
+  return available[Math.floor(Math.random() * available.length)];
+}
 
 /* =========================================================
-   APPLE-STYLE CARD MOVEMENT
-========================================================= */
+   PLACE FLIPPED CARDS IN ORDER
+   ========================================================= */
+
+function updateFlippedCardPositions() {
+  flippedCards.forEach((card, index) => {
+    const position = getOrderedPosition(index);
+    const x = position[0];
+    const y = position[1];
+
+    card.style.animation = "none";
+    card.style.setProperty("--x", `${x}vw`);
+    card.style.setProperty("--y", `${y}vh`);
+    card.style.left = `${x}vw`;
+    card.style.top = `${y}vh`;
+  });
+}
+
+/* =========================================================
+   ADD CARD TO FLIPPED ORDER
+   ========================================================= */
+
+function addToFlippedOrder(card) {
+  if (!flippedCards.includes(card)) {
+    flippedCards.push(card);
+  }
+
+  document.body.classList.add("cards-expanded");
+  updateFlippedCardPositions();
+}
+
+/* =========================================================
+   REMOVE CARD FROM FLIPPED ORDER
+   ========================================================= */
+
+function removeFromFlippedOrder(card) {
+  flippedCards = flippedCards.filter(item => item !== card);
+
+  if (flippedCards.length === 0) {
+    document.body.classList.remove("cards-expanded");
+  }
+
+  updateFlippedCardPositions();
+}
+
+function updateFlippedCardPositions() {
+  flippedCards.forEach((card, index) => {
+    const position = getOrderedPosition(index);
+    const x = position[0];
+    const y = position[1];
+
+    card.style.animation = "none";
+    card.style.transform = "translate(0, 0)";
+    card.style.left = `${x}vw`;
+    card.style.top = `${y}vh`;
+    card.style.setProperty("--x", `${x}vw`);
+    card.style.setProperty("--y", `${y}vh`);
+    card.dataset.flippedPosition = `${x},${y}`;
+  });
+}
+
+function removeFromFlippedOrder(card) {
+  const index = flippedCards.indexOf(card);
+  if (index === -1) return;
+
+  flippedCards.splice(index, 1);
+  delete card.dataset.flippedPosition;
+
+  if (flippedCards.length === 0) {
+    document.body.classList.remove("cards-expanded");
+  }
+
+  updateFlippedCardPositions();
+}
+
+/* =========================================================
+   CARD FLOATING
+   ========================================================= */
 
 function setCardMovement(card) {
-
-  if (
-    card.classList.contains("add-card")
-  ) {
-
+  if (card.classList.contains("add-card") || card.classList.contains("flipped")) {
     card.style.animation = "none";
-
     return;
   }
 
+  const moveX = (Math.random() * 8 - 4).toFixed(2);
+  const moveY = (Math.random() * 10 - 5).toFixed(2);
 
-  if (
-    card.classList.contains("flipped")
-  ) {
+  card.style.setProperty("--move-x", `${moveX}vw`);
+  card.style.setProperty("--move-y", `${moveY}vh`);
 
-    card.style.animation = "none";
+  const duration = 16 + Math.random() * 12;
+  const delay = Math.random() * -16;
 
-    return;
-  }
-
-
-  const moveX =
-    (
-      Math.random() * 2.8 - 1.4
-    ).toFixed(2);
-
-  const moveY =
-    (
-      Math.random() * 3.8 - 1.9
-    ).toFixed(2);
-
-  const moveR =
-    (
-      Math.random() * 2.4 - 1.2
-    ).toFixed(2);
-
-
-  card.style.setProperty(
-    "--move-x",
-    `${moveX}vw`
-  );
-
-  card.style.setProperty(
-    "--move-y",
-    `${moveY}vh`
-  );
-
-  card.style.setProperty(
-    "--move-r",
-    `${moveR}deg`
-  );
-
-
-  const duration =
-    22 +
-    Math.random() * 16;
-
-
-  const delay =
-    Math.random() * -18;
-
-
-  card.style.animation =
-    "none";
-
+  card.style.animation = "none";
   void card.offsetWidth;
-
-
-  card.style.animation =
-    `appleFloat ${duration}s cubic-bezier(0.45, 0, 0.55, 1) ${delay}s infinite`;
+  card.style.animation = `cardFloat ${duration}s cubic-bezier(0.45, 0, 0.55, 1) ${delay}s infinite`;
 }
 
-
 /* =========================================================
-   RANDOMIZE ORIGINAL CARDS
-========================================================= */
+   RANDOMIZE CARDS
+   ========================================================= */
 
 function randomizeCards() {
+  const shuffledPositions = shuffle(positions);
+  let normalPositionIndex = 0;
 
-  const shuffledPositions =
-    shuffle(positions);
+  cards.forEach(card => {
+    if (card.classList.contains("flipped")) return;
 
+    const [x, y] = shuffledPositions[normalPositionIndex];
+    normalPositionIndex++;
 
-  cards.forEach(
-    (card, index) => {
-
-      const [x, y] =
-        shuffledPositions[index];
-
-
-      card.style.setProperty(
-        "--x",
-        `${x}vw`
-      );
-
-      card.style.setProperty(
-        "--y",
-        `${y}vh`
-      );
-
-
-      setCardMovement(card);
-
-    }
-  );
-
+    card.style.setProperty("--x", `${x}vw`);
+    card.style.setProperty("--y", `${y}vh`);
+    setCardMovement(card);
+  });
 }
-
-
-/* =========================================================
-   ANIMATIONS
-========================================================= */
-
-const styleSheet =
-  document.createElement("style");
-
-styleSheet.textContent = `
-
-@keyframes appleFloat {
-
-  0% {
-    transform:
-      translate(0, 0)
-      rotate(0deg);
-  }
-
-  25% {
-    transform:
-      translate(
-        calc(var(--move-x) * 0.35),
-        calc(var(--move-y) * 0.25)
-      )
-      rotate(
-        calc(var(--move-r) * 0.3)
-      );
-  }
-
-  50% {
-    transform:
-      translate(
-        var(--move-x),
-        var(--move-y)
-      )
-      rotate(
-        var(--move-r)
-      );
-  }
-
-  75% {
-    transform:
-      translate(
-        calc(var(--move-x) * 0.55),
-        calc(var(--move-y) * 0.8)
-      )
-      rotate(
-        calc(var(--move-r) * 0.5)
-      );
-  }
-
-  100% {
-    transform:
-      translate(0, 0)
-      rotate(0deg);
-  }
-
-}
-
-
-@keyframes titleToBlack {
-
-  0% {
-    transform:
-      translate(-50%, -50%)
-      scale(1);
-    opacity: 1;
-  }
-
-  18% {
-    transform:
-      translate(-50%, -50%)
-      scale(0.86);
-    opacity: 1;
-  }
-
-  36% {
-    transform:
-      translate(-50%, -50%)
-      scale(0.35);
-    opacity: 1;
-  }
-
-  48% {
-    transform:
-      translate(-50%, -50%)
-      scale(0.055);
-    opacity: 1;
-  }
-
-  58% {
-    transform:
-      translate(-50%, -50%)
-      scale(0.08);
-    opacity: 1;
-  }
-
-  72% {
-    transform:
-      translate(-50%, -50%)
-      scale(1.1);
-    opacity: 1;
-  }
-
-  88% {
-    transform:
-      translate(-50%, -50%)
-      scale(5);
-    opacity: 0.65;
-  }
-
-  100% {
-    transform:
-      translate(-50%, -50%)
-      scale(16);
-    opacity: 0;
-  }
-
-}
-
-
-@keyframes blackReveal {
-
-  0% {
-    clip-path:
-      circle(0% at 50% 50%);
-    opacity: 1;
-  }
-
-  20% {
-    clip-path:
-      circle(0.15% at 50% 50%);
-    opacity: 1;
-  }
-
-  40% {
-    clip-path:
-      circle(1.5% at 50% 50%);
-    opacity: 1;
-  }
-
-  60% {
-    clip-path:
-      circle(12% at 50% 50%);
-    opacity: 1;
-  }
-
-  78% {
-    clip-path:
-      circle(45% at 50% 50%);
-    opacity: 1;
-  }
-
-  90% {
-    clip-path:
-      circle(90% at 50% 50%);
-    opacity: 1;
-  }
-
-  100% {
-    clip-path:
-      circle(160% at 50% 50%);
-    opacity: 1;
-  }
-
-}
-
-
-@keyframes blackToTitle {
-
-  0% {
-    clip-path:
-      circle(160% at 50% 50%);
-  }
-
-  25% {
-    clip-path:
-      circle(80% at 50% 50%);
-  }
-
-  50% {
-    clip-path:
-      circle(35% at 50% 50%);
-  }
-
-  68% {
-    clip-path:
-      circle(8% at 50% 50%);
-  }
-
-  78% {
-    clip-path:
-      circle(1% at 50% 50%);
-  }
-
-  100% {
-    clip-path:
-      circle(0% at 50% 50%);
-  }
-
-}
-
-
-@keyframes titleAppear {
-
-  0% {
-    transform:
-      translate(-50%, -50%)
-      scale(0.055);
-    opacity: 0;
-  }
-
-  20% {
-    transform:
-      translate(-50%, -50%)
-      scale(0.055);
-    opacity: 1;
-  }
-
-  45% {
-    transform:
-      translate(-50%, -50%)
-      scale(0.15);
-    opacity: 1;
-  }
-
-  70% {
-    transform:
-      translate(-50%, -50%)
-      scale(0.72);
-    opacity: 1;
-  }
-
-  100% {
-    transform:
-      translate(-50%, -50%)
-      scale(1);
-    opacity: 1;
-  }
-
-}
-
-`;
-
-document.head.appendChild(
-  styleSheet
-);
-
-
-/* =========================================================
-   INITIAL RANDOMIZATION
-========================================================= */
 
 randomizeCards();
 
-
 /* =========================================================
-   CARD → BLACK TRANSITION
-========================================================= */
+   OPENING TRANSFORMATION
+   ========================================================= */
 
-function enterBlackScreen() {
 
-  if (transitioning) {
-    return;
-  }
+function startOpening() {
+  body.classList.remove("playground-ready");
+  title.classList.remove("intro-zoom");
+  title.style.display = "block";
 
-  transitioning = true;
+  void title.offsetWidth;
+  title.classList.add("intro-zoom");
 
-  stopTrailSoundCompletely();
+  setTimeout(() => {
+    body.classList.add("playground-ready");
+  }, 100);
 
-  body.className =
-    "black-transition";
+  setTimeout(() => {
+    openingScreen.classList.add("opening-finished");
+  }, 1400);
 
-  title.style.animation =
-    "titleToBlack 2.15s cubic-bezier(0.16, 1, 0.3, 1) forwards";
-
-  blackTransition.style.animation =
-    "blackReveal 2.15s cubic-bezier(0.16, 1, 0.3, 1) forwards";
-
-  setTimeout(
-    () => {
-
-      body.className =
-        "black-mode";
-
-      currentMode = 4;
-
-      title.style.animation =
-        "none";
-
-      blackTransition.style.animation =
-        "none";
-
-      transitioning = false;
-
-    },
-    2200
-  );
-
+  setTimeout(() => {
+    title.style.display = "none";
+    introFinished = true;
+    updateTrailMode();
+  }, 1750);
 }
 
 
-/* =========================================================
-   TITLE CLICK
-========================================================= */
-
-title.addEventListener(
-  "click",
-  () => {
-
-    if (transitioning) {
-      return;
-    }
-
-
-    /* CARD → BLACK */
-
-    if (currentMode === 3) {
-
-      enterBlackScreen();
-
-      return;
-    }
-
-
-    /* IMAGE → WORD */
-
-    if (currentMode === 1) {
-
-      stopTrailSoundCompletely();
-
-      currentMode = 2;
-
-      body.className =
-        "word-mode";
-
-      return;
-    }
-
-
-    /* WORD → CARDS */
-
-    if (currentMode === 2) {
-
-      stopTrailSoundCompletely();
-
-      currentMode = 3;
-
-      body.className =
-        "card-mode";
-
-      return;
-    }
-
-  }
-);
-
+startOpening();
 
 /* =========================================================
-   BLACK SCREEN → IMAGE
-========================================================= */
+   CARD INTERACTION
+   ========================================================= */
 
-blackTransition.addEventListener(
-  "click",
-  () => {
+function attachCardInteraction(card) {
+  if (card.classList.contains("add-card")) return;
 
-    if (
-      currentMode !== 4 ||
-      transitioning
-    ) {
-      return;
-    }
-
-    transitioning = true;
-
-    body.className =
-      "black-transition";
-
-    title.style.display =
-      "block";
-
-    title.style.opacity =
-      "0";
-
-    title.style.transform =
-      "translate(-50%, -50%) scale(0.055)";
-
-    blackTransition.style.animation =
-      "blackToTitle 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards";
-
-    title.style.animation =
-      "titleAppear 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards";
-
-    setTimeout(
-      () => {
-
-        body.className =
-          "image-mode";
-
-        currentMode = 1;
-
-        blackTransition.style.animation =
-          "none";
-
-        blackTransition.style.opacity =
-          "0";
-
-        title.style.animation =
-          "none";
-
-        title.style.transform =
-          "translate(-50%, -50%) scale(1)";
-
-        title.style.opacity =
-          "1";
-
-        title.style.display =
-          "";
-
-        transitioning = false;
-
-      },
-      1850
-    );
-
-  }
-);
-
-
-/* =========================================================
-   CARD DRAG + FLIP
-========================================================= */
-
-function makeCardInteractive(card) {
-
-  let startX = 0;
-  let startY = 0;
-
-  let originalLeft = 0;
-  let originalTop = 0;
-
+  let pointerStartX = 0;
+  let pointerStartY = 0;
+  let cardStartX = 0;
+  let cardStartY = 0;
   let moved = false;
-
-  let lastPointerX = 0;
-  let lastPointerY = 0;
-
+  let lastX = 0;
+  let lastY = 0;
   let velocityX = 0;
   let velocityY = 0;
+  let lastTime = 0;
 
-  let lastMoveTime = 0;
+  card.addEventListener("pointerdown", event => {
+    if (event.button !== 0) return;
+    if (event.target.closest("input, textarea, button")) return;
 
+    moved = false;
+    pointerStartX = event.clientX;
+    pointerStartY = event.clientY;
 
-  /* POINTER DOWN */
+    const rect = card.getBoundingClientRect();
+    cardStartX = rect.left;
+    cardStartY = rect.top;
 
-  card.addEventListener(
-    "pointerdown",
-    (e) => {
+    lastX = event.clientX;
+    lastY = event.clientY;
+    lastTime = performance.now();
 
-      if (
-        e.target.tagName === "INPUT" ||
-        e.target.tagName === "TEXTAREA" ||
-        e.target.tagName === "BUTTON"
-      ) {
-        return;
-      }
+    card.style.animation = "none";
+    card.style.left = `${cardStartX / boundaryScale}px`;
+    card.style.top = `${cardStartY / boundaryScale}px`;
+    card.style.transform = "translate(0, 0)";
+    card.classList.add("dragging");
 
-      const rect =
-        card.getBoundingClientRect();
+    try {
+      card.setPointerCapture(event.pointerId);
+    } catch (error) {}
+  });
 
-      startX =
-        e.clientX;
+  card.addEventListener("pointermove", event => {
+    if (!card.classList.contains("dragging")) return;
 
-      startY =
-        e.clientY;
+    const dx = (event.clientX - pointerStartX) / boundaryScale;
+    const dy = (event.clientY - pointerStartY) / boundaryScale;
 
-      originalLeft =
-        rect.left;
-
-      originalTop =
-        rect.top;
-
-      lastPointerX =
-        e.clientX;
-
-      lastPointerY =
-        e.clientY;
-
-      velocityX = 0;
-      velocityY = 0;
-
-      lastMoveTime =
-        performance.now();
-
-      moved = false;
-
-      card.style.animation =
-        "none";
-
-      card.style.left =
-        `${originalLeft}px`;
-
-      card.style.top =
-        `${originalTop}px`;
-
-      card.style.transform =
-        "none";
-
-      card.style.transition =
-        "none";
-
-      card.setPointerCapture(
-        e.pointerId
-      );
-
-      card.classList.add(
-        "dragging"
-      );
-
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      moved = true;
     }
-  );
 
+    const now = performance.now();
+    const dt = Math.max(now - lastTime, 1);
 
-  /* POINTER MOVE */
+    velocityX = (event.clientX - lastX) / dt / boundaryScale;
+    velocityY = (event.clientY - lastY) / dt / boundaryScale;
 
-  card.addEventListener(
-    "pointermove",
-    (e) => {
+    lastX = event.clientX;
+    lastY = event.clientY;
+    lastTime = now;
 
-      if (
-        !card.hasPointerCapture(
-          e.pointerId
-        )
-      ) {
-        return;
+    let newX = cardStartX / boundaryScale + dx;
+    let newY = cardStartY / boundaryScale + dy;
+
+    const cardWidth = card.offsetWidth;
+    const cardHeight = card.offsetHeight;
+    const maxX = window.innerWidth - cardWidth;
+    const maxY = window.innerHeight - cardHeight;
+
+    newX = Math.max(0, Math.min(newX, maxX));
+    newY = Math.max(0, Math.min(newY, maxY));
+
+    card.style.left = `${newX}px`;
+    card.style.top = `${newY}px`;
+  });
+
+  card.addEventListener("pointerup", event => {
+    if (!card.classList.contains("dragging")) return;
+
+    card.classList.remove("dragging");
+
+    try {
+      card.releasePointerCapture(event.pointerId);
+    } catch (error) {}
+
+    if (!moved) {
+      body.classList.add("trail-paused");
+
+      const isCurrentlyFlipped = card.classList.contains("flipped");
+
+      if (!isCurrentlyFlipped) {
+        card.classList.add("flipped");
+        card.style.animation = "none";
+        card.style.transform = "translate(0, 0)";
+        addToFlippedOrder(card);
+      } else {
+        card.classList.remove("flipped");
+        removeFromFlippedOrder(card);
+
+        card.style.animation = "none";
+        card.style.transform = "translate(0, 0)";
+
+        const randomPosition = getRandomAvailablePosition();
+        const [randomX, randomY] = randomPosition;
+
+        card.style.left = `${randomX}vw`;
+        card.style.top = `${randomY}vh`;
+        card.style.setProperty("--x", `${randomX}vw`);
+        card.style.setProperty("--y", `${randomY}vh`);
+
+        setTimeout(() => {
+          setCardMovement(card);
+        }, 50);
       }
 
-      const now =
-        performance.now();
+      setTimeout(() => {
+        updateTrailMode();
+        body.classList.remove("trail-paused");
+      }, 700);
 
-      const dx =
-        e.clientX -
-        startX;
-
-      const dy =
-        e.clientY -
-        startY;
-
-      const deltaTime =
-        Math.max(
-          now - lastMoveTime,
-          1
-        );
-
-      velocityX =
-        (
-          e.clientX -
-          lastPointerX
-        ) /
-        deltaTime;
-
-      velocityY =
-        (
-          e.clientY -
-          lastPointerY
-        ) /
-        deltaTime;
-
-      lastPointerX =
-        e.clientX;
-
-      lastPointerY =
-        e.clientY;
-
-      lastMoveTime =
-        now;
-
-      if (
-        Math.abs(dx) > 5 ||
-        Math.abs(dy) > 5
-      ) {
-        moved = true;
-      }
-
-      card.style.left =
-        `${originalLeft + dx}px`;
-
-      card.style.top =
-        `${originalTop + dy}px`;
-
-    }
-  );
-
-
-  /* POINTER UP */
-
-  card.addEventListener(
-    "pointerup",
-    (e) => {
-
-      if (
-        !card.hasPointerCapture(
-          e.pointerId
-        )
-      ) {
-        return;
-      }
-
-      card.releasePointerCapture(
-        e.pointerId
-      );
-
-      card.classList.remove(
-        "dragging"
-      );
-
-
-      /* DRAGGED */
-
-      if (moved) {
-
-        const momentumX =
-          Math.max(
-            -45,
-            Math.min(
-              45,
-              velocityX * 90
-            )
-          );
-
-        const momentumY =
-          Math.max(
-            -45,
-            Math.min(
-              45,
-              velocityY * 90
-            )
-          );
-
-        const currentLeft =
-          parseFloat(
-            card.style.left
-          );
-
-        const currentTop =
-          parseFloat(
-            card.style.top
-          );
-
-        card.style.transition =
-          "left 0.65s cubic-bezier(0.16, 1, 0.3, 1), " +
-          "top 0.65s cubic-bezier(0.16, 1, 0.3, 1)";
-
-        card.style.left =
-          `${currentLeft + momentumX}px`;
-
-        card.style.top =
-          `${currentTop + momentumY}px`;
-
-        setTimeout(
-          () => {
-
-            card.style.transition =
-              "none";
-
-            if (
-              !card.classList.contains(
-                "flipped"
-              )
-            ) {
-
-              setCardMovement(
-                card
-              );
-
-            }
-
-          },
-          700
-        );
-
-        return;
-
-      }
-
-
-      /* + CARD */
-
-      if (
-        card.classList.contains(
-          "add-card"
-        ) &&
-        !card.classList.contains(
-          "has-image"
-        )
-      ) {
-        return;
-      }
-
-
-      /* FLIP */
-
-      card.classList.toggle(
-        "flipped"
-      );
-
-
-      /* TEXT SIDE */
-
-      if (
-        card.classList.contains(
-          "flipped"
-        )
-      ) {
-
-        card.style.animation =
-          "none";
-
-        card.style.transition =
-          "none";
-
-      }
-
-
-      /* PHOTO SIDE */
-
-      else {
-
-        setTimeout(
-          () => {
-
-            setCardMovement(
-              card
-            );
-
-          },
-          50
-        );
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   INITIAL CARD INTERACTION
-========================================================= */
-
-cards.forEach(
-  makeCardInteractive
-);
-
-
-/* =========================================================
-   CUSTOM CARD SYSTEM
-========================================================= */
-
-const addCard =
-  document.querySelector(
-    ".add-card"
-  );
-
-const customImageInput =
-  document.querySelector(
-    "#custom-image-input"
-  );
-
-let customImageURL = null;
-
-
-/* =========================================================
-   CLICK +
-========================================================= */
-
-addCard.addEventListener(
-  "click",
-  (e) => {
-
-    if (
-      e.target.tagName === "BUTTON" ||
-      e.target.tagName === "INPUT" ||
-      e.target.tagName === "TEXTAREA"
-    ) {
       return;
     }
 
-    if (
-      !addCard.classList.contains(
-        "flipped"
-      ) &&
-      !addCard.classList.contains(
-        "has-image"
-      )
-    ) {
+    const rect = card.getBoundingClientRect();
 
-      customImageInput.click();
+    let finalX = rect.left / boundaryScale + velocityX * 80;
+    let finalY = rect.top / boundaryScale + velocityY * 80;
 
+    const maxX = window.innerWidth - rect.width / boundaryScale;
+    const maxY = window.innerHeight - rect.height / boundaryScale;
+
+    finalX = Math.max(0, Math.min(finalX, maxX));
+    finalY = Math.max(60, Math.min(finalY, maxY));
+
+    card.style.left = `${finalX}px`;
+    card.style.top = `${finalY}px`;
+    card.style.transform = "translate(0, 0)";
+
+    if (!card.classList.contains("flipped")) {
+      setTimeout(() => {
+        setCardMovement(card);
+      }, 50);
     }
+  });
 
-  }
-);
+  card.addEventListener("pointercancel", event => {
+    if (!card.classList.contains("dragging")) return;
 
+    card.classList.remove("dragging");
 
-/* =========================================================
-   ADD RULE BUTTON
-========================================================= */
+    try {
+      card.releasePointerCapture(event.pointerId);
+    } catch (error) {}
 
-addCard.addEventListener(
-  "click",
-  (e) => {
+    card.style.transform = "translate(0, 0)";
 
-    if (
-      e.target.id ===
-      "save-custom-card"
-    ) {
-
-      e.preventDefault();
-
-      e.stopPropagation();
-
-      finishCustomCard();
-
+    if (!card.classList.contains("flipped")) {
+      setCardMovement(card);
     }
-
-  }
-);
-
-
-/* =========================================================
-   IMAGE UPLOAD
-========================================================= */
-
-customImageInput.addEventListener(
-  "change",
-  (e) => {
-
-    const file =
-      e.target.files[0];
-
-    if (!file) {
-      return;
-    }
-
-    customImageURL =
-      URL.createObjectURL(file);
-
-    const front =
-      addCard.querySelector(
-        ".add-card-front"
-      );
-
-    front.style.backgroundImage =
-      `url("${customImageURL}")`;
-
-    addCard.classList.add(
-      "has-image"
-    );
-
-    setTimeout(
-      () => {
-
-        addCard.classList.add(
-          "flipped"
-        );
-
-      },
-      100
-    );
-
-  }
-);
-
-
-/* =========================================================
-   FINISH CUSTOM CARD
-========================================================= */
-
-function finishCustomCard() {
-
-  const ruleTitleInput =
-    addCard.querySelector(
-      "#custom-rule-title"
-    );
-
-  const ruleDescriptionInput =
-    addCard.querySelector(
-      "#custom-rule-description"
-    );
-
-  if (!ruleTitleInput) {
-    return;
-  }
-
-  const ruleTitle =
-    ruleTitleInput.value.trim();
-
-  const ruleDescription =
-    ruleDescriptionInput.value.trim();
-
-  if (!ruleTitle) {
-
-    ruleTitleInput.focus();
-
-    return;
-
-  }
-
-  const plusRect =
-    addCard.getBoundingClientRect();
-
-  const destination =
-    getExtremeDestination(
-      plusRect.left,
-      plusRect.top,
-      plusRect.width,
-      plusRect.height
-    );
-
-  const completedCard =
-    document.createElement(
-      "div"
-    );
-
-  completedCard.className =
-    "card custom-completed-card flipped";
-
-  completedCard.style.left =
-    `${plusRect.left}px`;
-
-  completedCard.style.top =
-    `${plusRect.top}px`;
-
-  completedCard.style.width =
-    `${plusRect.width}px`;
-
-  completedCard.style.height =
-    `${plusRect.height}px`;
-
-  completedCard.style.zIndex =
-    "50";
-
-  completedCard.style.opacity =
-    "1";
-
-  completedCard.style.transform =
-    "scale(1.08) rotate(-3deg)";
-
-  completedCard.style.animation =
-    "none";
-
-  completedCard.innerHTML = `
-
-    <div class="card-inner">
-
-      <div
-        class="card-front"
-        style="
-          background-image: url('${customImageURL}');
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
-        "
-      ></div>
-
-      <div class="card-back">
-
-        <span>YOUR RULE</span>
-
-        <h2>
-          ${escapeHTML(ruleTitle)}
-        </h2>
-
-        <p>
-          ${escapeHTML(ruleDescription)}
-        </p>
-
-      </div>
-
-    </div>
-
-  `;
-
-  addCard.parentNode.insertBefore(
-    completedCard,
-    addCard
-  );
-
-  makeCardInteractive(
-    completedCard
-  );
-
-  void completedCard.offsetWidth;
-
-  completedCard.style.transition =
-    "transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), " +
-    "left 2.2s cubic-bezier(0.16, 1, 0.3, 1), " +
-    "top 2.2s cubic-bezier(0.16, 1, 0.3, 1)";
-
-  completedCard.style.left =
-    `${destination.x}px`;
-
-  completedCard.style.top =
-    `${destination.y}px`;
-
-  completedCard.style.transform =
-    "scale(1) rotate(0deg)";
-
-  resetAddCard();
-
-  setTimeout(
-    () => {
-
-      completedCard.style.transition =
-        "none";
-
-      if (
-        completedCard.classList.contains(
-          "flipped"
-        )
-      ) {
-
-        completedCard.style.animation =
-          "none";
-
-      }
-
-    },
-    2300
-  );
-
+  });
 }
 
+/* =========================================================
+   ATTACH CARD INTERACTION
+   ========================================================= */
+
+cards.forEach(card => {
+  attachCardInteraction(card);
+});
 
 /* =========================================================
-   EXTREME DESTINATION
-========================================================= */
+   ADD CARD DRAG
+   ========================================================= */
 
-function getExtremeDestination(
-  startX,
-  startY,
-  cardWidth,
-  cardHeight
-) {
+function attachAddCardDrag(card) {
+  if (!card) return;
 
-  const margin = 30;
+  let pointerStartX = 0;
+  let pointerStartY = 0;
+  let cardStartX = 0;
+  let cardStartY = 0;
+  let moved = false;
+  let dragging = false;
 
-  const screenWidth =
-    window.innerWidth;
+  card.addEventListener("pointerdown", event => {
+    if (event.button !== 0) return;
+    if (event.target.closest("input, textarea, button")) return;
 
-  const screenHeight =
-    window.innerHeight;
+    const rect = card.getBoundingClientRect();
 
-  const destinations = [
+    pointerStartX = event.clientX;
+    pointerStartY = event.clientY;
+    cardStartX = rect.left / boundaryScale;
+    cardStartY = rect.top / boundaryScale;
+    moved = false;
+    dragging = true;
 
-    {
-      x: margin,
-      y: margin
-    },
+    card.style.animation = "none";
+    card.style.transform = "translate(0, 0)";
+    card.style.left = `${cardStartX}px`;
+    card.style.top = `${cardStartY}px`;
+    card.classList.add("dragging");
 
-    {
-      x:
-        (screenWidth -
-          cardWidth) / 2,
+    try {
+      card.setPointerCapture(event.pointerId);
+    } catch (error) {}
+  });
 
-      y: margin
-    },
+  card.addEventListener("pointermove", event => {
+    if (!dragging) return;
 
-    {
-      x:
-        screenWidth -
-        cardWidth -
-        margin,
+    const dx = (event.clientX - pointerStartX) / boundaryScale;
+    const dy = (event.clientY - pointerStartY) / boundaryScale;
 
-      y: margin
-    },
-
-    {
-      x: margin,
-
-      y:
-        (screenHeight -
-          cardHeight) / 2
-    },
-
-    {
-      x:
-        screenWidth -
-        cardWidth -
-        margin,
-
-      y:
-        (screenHeight -
-          cardHeight) / 2
-    },
-
-    {
-      x: margin,
-
-      y:
-        screenHeight -
-        cardHeight -
-        margin
-    },
-
-    {
-      x:
-        (screenWidth -
-          cardWidth) / 2,
-
-      y:
-        screenHeight -
-        cardHeight -
-        margin
-    },
-
-    {
-      x:
-        screenWidth -
-        cardWidth -
-        margin,
-
-      y:
-        screenHeight -
-        cardHeight -
-        margin
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      moved = true;
     }
 
-  ];
+    if (!moved) return;
 
-  destinations.forEach(
-    (destination) => {
+    const cardWidth = card.offsetWidth;
+    const cardHeight = card.offsetHeight;
 
-      destination.distance =
-        Math.hypot(
-          destination.x -
-            startX,
+    let newX = cardStartX + dx;
+    let newY = cardStartY + dy;
 
-          destination.y -
-            startY
-        );
+    const maxX = window.innerWidth - cardWidth;
+    const maxY = window.innerHeight - cardHeight;
 
-    }
-  );
+    newX = Math.max(0, Math.min(newX, maxX));
+    newY = Math.max(0, Math.min(newY, maxY));
 
-  destinations.sort(
-    (a, b) =>
-      b.distance -
-      a.distance
-  );
+    card.style.left = `${newX}px`;
+    card.style.top = `${newY}px`;
+  });
 
-  const farthest =
-    destinations.slice(
-      0,
-      3
-    );
+  function finishAddCardDrag(event) {
+    if (!dragging) return;
 
-  const selected =
-    farthest[
-      Math.floor(
-        Math.random() *
-        farthest.length
-      )
-    ];
+    dragging = false;
+    card.classList.remove("dragging");
 
-  return {
+    try {
+      card.releasePointerCapture(event.pointerId);
+    } catch (error) {}
+  }
 
-    x: selected.x,
-
-    y: selected.y
-
-  };
-
+  card.addEventListener("pointerup", finishAddCardDrag);
+  card.addEventListener("pointercancel", finishAddCardDrag);
 }
 
+/* =========================================================
+   ENABLE ADD CARD DRAGGING
+   ========================================================= */
+
+attachAddCardDrag(document.querySelector(".add-card"));
 
 /* =========================================================
-   RESET + CARD
-========================================================= */
+   TRAIL MODE
+   ========================================================= */
 
-function resetAddCard() {
+function updateTrailMode() {
+  if (currentMode !== 3 || !introFinished) return;
 
-  addCard.classList.remove(
-    "flipped",
-    "has-image",
-    "custom-complete"
+  const regularCards = Array.from(
+    document.querySelectorAll(".card:not(.add-card)")
   );
 
-  customImageURL =
-    null;
+  const flippedCount = regularCards.filter(
+    card => card.classList.contains("flipped")
+  ).length;
 
-  addCard.querySelector(
-    ".card-inner"
-  ).innerHTML = `
+  const photoCount = regularCards.length - flippedCount;
 
-    <div class="card-front add-card-front">
-
-      <span>+</span>
-
-    </div>
-
-    <div class="card-back add-card-back">
-
-      <label>
-
-        RULE
-
-        <input
-          type="text"
-          id="custom-rule-title"
-          placeholder="Write your rule..."
-          maxlength="60"
-        >
-
-      </label>
-
-      <label>
-
-        WHY?
-
-        <textarea
-          id="custom-rule-description"
-          placeholder="What does this rule mean?"
-          maxlength="180"
-        ></textarea>
-
-      </label>
-
-      <button
-        type="button"
-        id="save-custom-card"
-      >
-        ADD RULE
-      </button>
-
-    </div>
-
-  `;
-
-  customImageInput.value =
-    "";
-
-  addCard.style.transform =
-    "none";
-
-  addCard.style.animation =
-    "none";
-
-  addCard.style.transition =
-    "none";
-
-  addCard.style.zIndex =
-    "10";
-
+  if (photoCount > flippedCount) {
+    body.classList.add("show-word-trail");
+    body.classList.remove("show-image-trail");
+  } else if (flippedCount > photoCount) {
+    body.classList.add("show-image-trail");
+    body.classList.remove("show-word-trail");
+  } else {
+    body.classList.remove("show-word-trail", "show-image-trail");
+  }
 }
 
+/* =========================================================
+   TRAIL BOUNDARY CHECK
+   ========================================================= */
 
 /* =========================================================
-   SAFE TEXT
-========================================================= */
+   TRAIL BOUNDARY CHECK
+   ========================================================= */
 
-function escapeHTML(text) {
+function isCursorInsidePlayground(event) {
+  const playground = document.querySelector(".floating-space");
+  if (!playground) return false;
 
-  const div =
-    document.createElement(
-      "div"
-    );
+  const rect = playground.getBoundingClientRect();
 
-  div.textContent =
-    text;
-
-  return div.innerHTML;
-
+  return (
+    event.clientX >= rect.left &&
+    event.clientX <= rect.right &&
+    event.clientY >= rect.top &&
+    event.clientY <= rect.bottom
+  );
 }
 
+/* =========================================================
+   IMAGE TRAIL
+   ========================================================= */
 
 /* =========================================================
-   IMAGE TRAIL + MUSIC
-========================================================= */
+   IMAGE TRAIL
+   ========================================================= */
 
 let lastImageX = 0;
 let lastImageY = 0;
 let lastImageTime = 0;
 
+document.addEventListener("pointermove", event => {
+  if (!introFinished) return;
+  if (!body.classList.contains("show-image-trail")) return;
+  if (body.classList.contains("trail-paused")) return;
+  if (!isCursorInsidePlayground(event)) return;
 
-document.addEventListener(
-  "mousemove",
-  (e) => {
+  const playground = document.querySelector(".floating-space");
+  if (!playground) return;
 
-    if (
-      currentMode !== 1
-    ) {
+  const rect = playground.getBoundingClientRect();
 
-      stopTrailSoundCompletely();
+  const imageSize = window.matchMedia("(max-width: 700px)").matches
+    ? 75
+    : 90;
 
-      return;
+  const radius = imageSize / 2;
 
-    }
+  // Keep the entire circular image inside the rectangle.
+  if (rect.width < imageSize || rect.height < imageSize) return;
 
+  const x = Math.max(
+    rect.left + radius,
+    Math.min(event.clientX, rect.right - radius)
+  );
 
-    /* START MUSIC WHILE MOVING */
+  const y = Math.max(
+    rect.top + radius,
+    Math.min(event.clientY, rect.bottom - radius)
+  );
 
-    startTrailSound();
+  const now = performance.now();
 
-    stopTrailSound();
+  const distance = Math.hypot(
+    event.clientX - lastImageX,
+    event.clientY - lastImageY
+  );
 
+  if (now - lastImageTime < 80 || distance < 15) return;
 
-    const now =
-      Date.now();
+  lastImageTime = now;
+  lastImageX = event.clientX;
+  lastImageY = event.clientY;
 
+  const img = document.createElement("img");
 
-    if (
-      now - lastImageTime <
-      80
-    ) {
-      return;
-    }
+  img.src = trailImages[
+    Math.floor(Math.random() * trailImages.length)
+  ];
 
+  img.className = "trail-image";
+  img.style.left = `${x}px`;
+  img.style.top = `${y}px`;
 
-    const distance =
-      Math.hypot(
-        e.clientX -
-          lastImageX,
+  imageTrail.appendChild(img);
 
-        e.clientY -
-          lastImageY
-      );
+  playTrailSound();
 
-
-    if (
-      distance < 15
-    ) {
-      return;
-    }
-
-
-    lastImageX =
-      e.clientX;
-
-    lastImageY =
-      e.clientY;
-
-    lastImageTime =
-      now;
-
-
-    const img =
-      document.createElement(
-        "img"
-      );
-
-
-    const randomImage =
-      trailImages[
-        Math.floor(
-          Math.random() *
-          trailImages.length
-        )
-      ];
-
-
-    img.src =
-      randomImage;
-
-    img.className =
-      "trail-image";
-
-
-    img.style.left =
-      `${e.clientX}px`;
-
-    img.style.top =
-      `${e.clientY}px`;
-
-
-    img.style.transform =
-      `translate(-50%, -50%)
-       rotate(${Math.random() * 20 - 10}deg)`;
-
-
-    imageTrail.appendChild(
-      img
-    );
-
-
-    setTimeout(
-      () => {
-
-        img.remove();
-
-      },
-      1500
-    );
-
-  }
-);
-
+  setTimeout(() => {
+    img.remove();
+  }, 800);
+});
 
 /* =========================================================
    WORD TRAIL
-========================================================= */
+   ========================================================= */
+/* =========================================================
+   WORD TRAIL
+   ========================================================= */
 
 let lastWordX = 0;
 let lastWordY = 0;
 let lastWordTime = 0;
 
+document.addEventListener("pointermove", event => {
+  if (!introFinished) return;
+  if (!body.classList.contains("show-word-trail")) return;
+  if (body.classList.contains("trail-paused")) return;
+  if (!isCursorInsidePlayground(event)) return;
 
-document.addEventListener(
-  "mousemove",
-  (e) => {
+  const playground = document.querySelector(".floating-space");
+  if (!playground) return;
 
-    if (
-      currentMode !== 2
-    ) {
-      return;
-    }
+  const rect = playground.getBoundingClientRect();
 
+  const now = performance.now();
 
-    const now =
-      Date.now();
+  const distance = Math.hypot(
+    event.clientX - lastWordX,
+    event.clientY - lastWordY
+  );
 
+  if (now - lastWordTime < 90 || distance < 18) return;
 
-    if (
-      now - lastWordTime <
-      90
-    ) {
-      return;
-    }
+  lastWordTime = now;
+  lastWordX = event.clientX;
+  lastWordY = event.clientY;
 
+  const word = document.createElement("div");
+  word.className = "trail-word";
 
-    const distance =
-      Math.hypot(
-        e.clientX -
-          lastWordX,
+  word.textContent = trailWords[
+    Math.floor(Math.random() * trailWords.length)
+  ];
 
-        e.clientY -
-          lastWordY
-      );
+  // Measure the complete word before positioning it.
+  word.style.left = "0px";
+  word.style.top = "0px";
 
+  wordTrail.appendChild(word);
 
-    if (
-      distance < 18
-    ) {
-      return;
-    }
+  const wordRect = word.getBoundingClientRect();
 
+  const halfWidth = wordRect.width / 2;
+  const halfHeight = wordRect.height / 2;
 
-    lastWordX =
-      e.clientX;
-
-    lastWordY =
-      e.clientY;
-
-    lastWordTime =
-      now;
-
-
-    const word =
-      document.createElement(
-        "span"
-      );
-
-
-    word.className =
-      "trail-word";
-
-
-    word.textContent =
-      trailWords[
-        Math.floor(
-          Math.random() *
-          trailWords.length
-        )
-      ];
-
-
-    word.style.left =
-      `${e.clientX}px`;
-
-    word.style.top =
-      `${e.clientY}px`;
-
-
-    const randomSize =
-      Math.floor(
-        Math.random() * 9
-      ) + 15;
-
-
-    const randomRotation =
-      Math.random() * 10 - 5;
-
-
-    word.style.fontSize =
-      `${randomSize}px`;
-
-
-    word.style.transform =
-      `translate(-50%, -50%)
-       rotate(${randomRotation}deg)`;
-
-
-    wordTrail.appendChild(
-      word
-    );
-
-
-    setTimeout(
-      () => {
-
-        word.remove();
-
-      },
-      1400
-    );
-
+  // Do not create words if the rectangle is too small.
+  if (
+    rect.width < wordRect.width ||
+    rect.height < wordRect.height
+  ) {
+    word.remove();
+    return;
   }
-);
+
+  // Keep every edge of the word inside the rectangle.
+  const x = Math.max(
+    rect.left + halfWidth,
+    Math.min(event.clientX, rect.right - halfWidth)
+  );
+
+  const y = Math.max(
+    rect.top + halfHeight,
+    Math.min(event.clientY, rect.bottom - halfHeight)
+  );
+
+  word.style.left = `${x}px`;
+  word.style.top = `${y}px`;
+
+  playTrailSound();
+
+  setTimeout(() => {
+    word.remove();
+  }, 650);
+});
+
+/* =========================================================
+   ADD YOUR OWN CARD
+   ========================================================= */
+
+const addCard = document.querySelector(".add-card");
+const customImageInput = document.getElementById("custom-image-input");
+const customRuleTitle = document.getElementById("custom-rule-title");
+const customRuleDescription = document.getElementById("custom-rule-description");
+const saveCustomCard = document.getElementById("save-custom-card");
+
+let customImageURL = null;
+
+/* =========================================================
+   OPEN IMAGE UPLOAD
+   ========================================================= */
+
+if (addCard && customImageInput) {
+  addCard.addEventListener("click", event => {
+    if (event.target.closest("input, textarea, button")) return;
+
+    if (!addCard.classList.contains("flipped")) {
+      if (addCard.classList.contains("custom-image-ready")) {
+        body.classList.add("trail-paused");
+        addCard.classList.add("flipped");
+
+        setTimeout(() => {
+          if (customRuleTitle) customRuleTitle.focus();
+        }, 750);
+      } else {
+        body.classList.add("trail-paused");
+        customImageInput.click();
+      }
+    }
+  });
+}
+
+/* =========================================================
+   CUSTOM IMAGE UPLOAD
+   ========================================================= */
+
+if (customImageInput && addCard) {
+  customImageInput.addEventListener("change", event => {
+    const file = event.target.files[0];
+
+    if (!file) {
+      body.classList.remove("trail-paused");
+      return;
+    }
+
+    if (customImageURL) {
+      URL.revokeObjectURL(customImageURL);
+    }
+
+    customImageURL = URL.createObjectURL(file);
+
+    const front = addCard.querySelector(".add-card-front");
+
+    if (front) {
+      front.style.backgroundImage = `url("${customImageURL}")`;
+      front.classList.add("has-image");
+    }
+
+    addCard.classList.add("custom-image-ready");
+    addCard.classList.add("flipped");
+    body.classList.add("trail-paused");
+
+    setTimeout(() => {
+      if (customRuleTitle) customRuleTitle.focus();
+    }, 750);
+  });
+}
+
+/* =========================================================
+   SAVE CUSTOM CARD
+   ========================================================= */
+
+if (saveCustomCard) {
+  saveCustomCard.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const ruleTitle = customRuleTitle
+      ? customRuleTitle.value.trim()
+      : "";
+
+    const ruleDescription = customRuleDescription
+      ? customRuleDescription.value.trim()
+      : "";
+
+    if (!customImageURL || !ruleTitle) return;
+
+    createCustomCard(
+      customImageURL,
+      ruleTitle,
+      ruleDescription
+    );
+
+    customImageURL = null;
+
+    if (customRuleTitle) customRuleTitle.value = "";
+    if (customRuleDescription) customRuleDescription.value = "";
+    if (customImageInput) customImageInput.value = "";
+
+    resetAddCard();
+    body.classList.remove("trail-paused");
+    updateTrailMode();
+  });
+}
+
+/* =========================================================
+   RESET ADD CARD
+   ========================================================= */
+
+function resetAddCard() {
+  if (!addCard) return;
+
+  const front = addCard.querySelector(".add-card-front");
+
+  if (front) {
+    front.style.backgroundImage = "";
+    front.classList.remove("has-image");
+  }
+
+  addCard.classList.remove("custom-image-ready");
+  addCard.classList.remove("flipped");
+  addCard.style.animation = "none";
+  addCard.style.transform = "translate(0, 0)";
+}
+
+/* =========================================================
+   CREATE CUSTOM CARD
+   ========================================================= */
+
+function createCustomCard(imageURL, ruleTitle, ruleDescription) {
+  const card = document.createElement("div");
+
+  card.className = "card custom-card-entering";
+
+
+card.innerHTML = `
+  <div class="card-inner">
+    <div class="card-front">
+      <img src="${imageURL}" alt="Custom rule">
+    </div>
+    <div class="card-back">
+      <h2>${escapeHTML(ruleTitle)}</h2>
+      <p>${escapeHTML(ruleDescription)}</p>
+    </div>
+  </div>
+`;
+
+
+  if (addCard) {
+    addCard.parentNode.insertBefore(card, addCard);
+  }
+
+  const occupiedNormalPositions = Array.from(
+    document.querySelectorAll(".card:not(.add-card):not(.flipped)")
+  ).map(card => {
+    const x = card.style.getPropertyValue("--x");
+    const y = card.style.getPropertyValue("--y");
+    return `${x},${y}`;
+  });
+
+  const availableDestinations = positions.filter(position => {
+    const key = `${position[0]}vw,${position[1]}vh`;
+    return !occupiedNormalPositions.includes(key);
+  });
+
+  let destination;
+
+  if (availableDestinations.length > 0) {
+    destination = availableDestinations[
+      Math.floor(Math.random() * availableDestinations.length)
+    ];
+  } else {
+    destination = positions[
+      Math.floor(Math.random() * positions.length)
+    ];
+  }
+
+  if (addCard) {
+    const addRect = addCard.getBoundingClientRect();
+    const startX = addRect.left / boundaryScale;
+    const startY = addRect.top / boundaryScale;
+
+    card.style.left = `${startX}px`;
+    card.style.top = `${startY}px`;
+  } else {
+    card.style.left = `${destination[0]}vw`;
+    card.style.top = `${destination[1]}vh`;
+  }
+
+  card.style.transform = "translate(0, 0)";
+  card.style.animation = "none";
+  card.classList.remove("flipped");
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      card.style.left = `${destination[0]}vw`;
+      card.style.top = `${destination[1]}vh`;
+    });
+  });
+
+  setTimeout(() => {
+    card.classList.remove("custom-card-entering");
+    setCardMovement(card);
+  }, 1050);
+
+  attachCardInteraction(card);
+
+  return card;
+}
+
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
+
+function escapeHTML(value) {
+  const div = document.createElement("div");
+  div.textContent = value;
+  return div.innerHTML;
+}
