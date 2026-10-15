@@ -1,116 +1,288 @@
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
 * {
   box-sizing: border-box;
 }
 
 html,
 body {
-  margin: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 body {
   background: white;
+  color: black;
   font-family: Helvetica, Arial, sans-serif;
-}
-
-
-/* =========================
-   TITLE
-========================= */
-
-h1 {
-  position: fixed;
-
-  top: 50%;
-  left: 50%;
-
-  transform:
-    translate(-50%, -50%)
-    scale(1);
-
-  margin: 0;
-
-  z-index: 500;
-
-  font-family: Helvetica, Arial, sans-serif;
-
-  font-size: 32px;
-  font-weight: 700;
-
-  letter-spacing: -0.03em;
-
-  white-space: nowrap;
-
-  cursor: pointer;
-  user-select: none;
-
-  transition:
-    transform 1.15s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.7s ease;
-}
-
-
-/* =========================
-   FLOATING SPACE
-========================= */
-
-.floating-space {
-  position: fixed;
-
-  inset: 0;
-
-  width: 100vw;
-  height: 100vh;
-
   overflow: hidden;
 }
 
+/* =========================================================
+   OPENING
+   ========================================================= */
 
-/* =========================
+#opening-screen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  z-index: 900;
+  pointer-events: auto;
+  overflow: hidden;
+  opacity: 1;
+}
+
+#opening-screen.opening-finished {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* =========================================================
+   TITLE
+   ========================================================= */
+
+
+#title {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%) scale(1);
+  font-size: 32px;
+  line-height: 1;
+  font-weight: 700;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: center center;
+  will-change: transform, opacity;
+
+  border: 2px solid black;
+  padding: 110px 24px;
+}
+
+
+#title.intro-zoom {
+  animation: titleTransform 1.7s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+
+@keyframes titleTransform {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  35% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  55% {
+    opacity: 0.65;
+    transform: translate(-50%, -50%) scale(1.8);
+  }
+  75% {
+    opacity: 0.35;
+    transform: translate(-50%, -50%) scale(4.2);
+  }
+  90% {
+    opacity: 0.12;
+    transform: translate(-50%, -50%) scale(8.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(18);
+  }
+}
+
+
+/* =========================================================
+   BOUNDARY HANDLE
+   ========================================================= */
+
+#boundary-handle {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: 80px;
+  height: 28px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+#boundary-handle-bar {
+  width: 42px;
+  height: 7px;
+  background: #d0d0d0;
+  border-radius: 100px;
+  transition: background 0.2s ease, width 0.2s ease;
+}
+
+#boundary-handle:hover #boundary-handle-bar {
+  width: 48px;
+  background: #bdbdbd;
+}
+
+body.boundary-dragging #boundary-handle-bar {
+  width: 52px;
+  background: #b5b5b5;
+}
+
+/* =========================================================
+   BOTTOM ZOOM HANDLE
+   ========================================================= */
+
+#zoom-handle {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  width: 80px;
+  height: 28px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+#zoom-handle-bar {
+  width: 42px;
+  height: 7px;
+  background: #d0d0d0;
+  border-radius: 100px;
+  transition: background 0.2s ease, width 0.2s ease;
+}
+
+#zoom-handle:hover #zoom-handle-bar {
+  width: 48px;
+  background: #bdbdbd;
+}
+
+body.zoom-dragging #zoom-handle-bar {
+  width: 52px;
+  background: #b5b5b5;
+}
+
+/* =========================================================
+   PLAYGROUND
+   ========================================================= */
+
+.floating-space {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 10;
+  opacity: 1;
+  transform: translateX(-50%) scale(var(--boundary-scale, 1));
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.floating-space::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid black;
+  pointer-events: none;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+body.boundary-scaled .floating-space::after {
+  opacity: 1;
+}
+
+body.playground-ready .floating-space {
+  opacity: 1;
+}
+
+/* =========================================================
+   EXPANDED FLIPPED-CARD VIEW
+   ========================================================= */
+
+
+body.cards-expanded .floating-space {
+  transform: translateX(-50%) scale(calc(var(--boundary-scale, 1) * 0.72));
+  overflow: visible;
+}
+
+body.cards-expanded .floating-space::after {
+  opacity: 1;
+}
+
+
+/* =========================================================
    CARDS
-========================= */
+   ========================================================= */
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
 
 .card {
   position: absolute;
-
-  width: 150px;
-  height: 150px;
-
-  perspective: 1200px;
-
-  cursor: grab;
-  user-select: none;
-
-  z-index: 10;
-
-  touch-action: none;
-
   left: var(--x);
   top: var(--y);
+  width: 160px;
+  height: 160px;
+  perspective: 1200px;
+  cursor: grab;
+  z-index: 10;
+  touch-action: none;
+  user-select: none;
+  will-change: transform, left, top;
+}
+
+.card:active {
+  cursor: grabbing;
 }
 
 .card.dragging {
-  cursor: grabbing;
   z-index: 1000;
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Smooth movement when cards move outside the boundary */
+body.cards-expanded .card:not(.dragging) {
+  transition:
+    left 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 
-/* =========================
+/* =========================================================
    CARD INNER
-========================= */
+   ========================================================= */
 
 .card-inner {
   position: relative;
-
   width: 100%;
   height: 100%;
-
   transform-style: preserve-3d;
-
-  transition:
-    transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 0.7s cubic-bezier(0.2, 0.75, 0.2, 1);
 }
 
 .card.flipped .card-inner {
@@ -118,470 +290,422 @@ h1 {
 }
 
 
-/* =========================
-   CARD FRONT + BACK
-========================= */
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.2, 0.75, 0.2, 1);
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+/* =========================================================
+   CARD FRONT / BACK
+   ========================================================= */
 
 .card-front,
 .card-back {
   position: absolute;
-
   inset: 0;
-
   width: 100%;
   height: 100%;
-
-  border-radius: 22px;
-
+  border-radius: 20px;
+  font-size: 10px;
   overflow: hidden;
-
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
+.card-back {
+  transform: rotateY(180deg) scale(1.15);
+}
 
-/* =========================
-   FRONT
-========================= */
+
+/* =========================================================
+   CARD FRONT
+   ========================================================= */
 
 .card-front {
   background: white;
 }
 
 .card-front img {
+  display: block;
   width: 100%;
   height: 100%;
-
   object-fit: cover;
-
-  display: block;
-
   pointer-events: none;
 }
 
-
-/* =========================
-   BACK
-========================= */
+/* =========================================================
+   CARD BACK
+   ========================================================= */
 
 .card-back {
   background: #f4f4f4;
-
-  transform: rotateY(180deg);
-
   padding: 14px;
-
   display: flex;
-
   flex-direction: column;
-
   justify-content: space-between;
+  transform: rotateY(180deg);
+  color: black;
 }
 
+/* =========================================================
+   CARD BACK TEXT
+   ========================================================= */
+
 .card-back span {
-  font-size: 8px;
-
+  font-size: 6px;
+  line-height: 1.1;
   font-weight: 700;
-
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
 }
 
 .card-back h2 {
-  margin: 0;
-
-  font-size: 15px;
-
+  font-size: 10px;
   line-height: 1.05;
-
   font-weight: 700;
-
-  letter-spacing: -0.03em;
+  margin-top: auto;
+  margin-bottom: 5px;
 }
 
 .card-back p {
+  font-size: 7px;
+  line-height: 1.25;
+  font-weight: 400;
   margin: 0;
-
-  font-size: 9px;
-
-  line-height: 1.3;
 }
 
+/* =========================================================
+   RULE TEXT
+   ========================================================= */
 
-/* =========================
+.rule-number {
+  font-size: 6px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.rule-title {
+  font-size: 10px;
+  line-height: 1.05;
+  font-weight: 700;
+  margin-top: auto;
+  margin-bottom: 5px;
+}
+
+.rule-description {
+  font-size: 7px;
+  line-height: 1.25;
+  font-weight: 400;
+}
+
+/* =========================================================
    IMAGE TRAIL
-========================= */
+   ========================================================= */
 
 #image-trail {
   position: fixed;
-
   inset: 0;
-
   width: 100vw;
   height: 100vh;
-
   pointer-events: none;
-
-  z-index: 200;
-
-  display: none;
+  z-index: 300;
+  overflow: hidden;
 }
 
 .trail-image {
-  position: absolute;
-
-  width: 130px;
-  height: 130px;
-
+  position: fixed;
+  width: 90px;
+  height: 90px;
   object-fit: cover;
-
   border-radius: 50%;
-
   pointer-events: none;
-
-  transform: translate(-50%, -50%);
-
-  animation:
-    trailFade 1.5s ease-out forwards;
+  z-index: 300;
+  animation: imageTrailAppear 0.8s ease-out forwards;
 }
 
-@keyframes trailFade {
-
+@keyframes imageTrailAppear {
   0% {
-    opacity: 1;
-
-    transform:
-      translate(-50%, -50%)
-      scale(1);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
   }
-
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
   100% {
     opacity: 0;
-
-    transform:
-      translate(-50%, -50%)
-      scale(0.8);
+    transform: translate(-50%, -50%) scale(1);
   }
-
 }
 
-
-/* =========================
+/* =========================================================
    WORD TRAIL
-========================= */
+   ========================================================= */
 
 #word-trail {
   position: fixed;
-
   inset: 0;
-
   width: 100vw;
   height: 100vh;
-
   pointer-events: none;
-
-  z-index: 200;
-
-  display: none;
-
+  z-index: 300;
   overflow: hidden;
 }
 
 .trail-word {
-  position: absolute;
-
-  white-space: nowrap;
-
-  pointer-events: none;
-
-  transform: translate(-50%, -50%);
-
+  position: fixed;
   font-family: Helvetica, Arial, sans-serif;
-
   font-size: 18px;
-
   line-height: 1;
-
   font-weight: 700;
-
-  letter-spacing: -0.03em;
-
-  color: black;
-
-  animation:
-    wordFade 1.4s ease-out forwards;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: wordTrailAppear 0.65s ease-out forwards;
 }
 
-@keyframes wordFade {
-
+@keyframes wordTrailAppear {
   0% {
-    opacity: 1;
-
-    transform:
-      translate(-50%, -50%)
-      scale(1)
-      rotate(0deg);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
   }
-
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  70% {
+    opacity: 1;
+  }
   100% {
     opacity: 0;
-
-    transform:
-      translate(-50%, -50%)
-      scale(0.85)
-      rotate(3deg);
+    transform: translate(-50%, -50%) scale(1);
   }
-
 }
 
+/* =========================================================
+   PAUSE TRAILS
+   ========================================================= */
 
-/* =========================
-   MODE VISIBILITY
-========================= */
+body.trail-paused #image-trail,
+body.trail-paused #word-trail {
+  display: none !important;
+}
 
-body.image-mode #image-trail {
+/* =========================================================
+   TRAIL MODES
+   ========================================================= */
+
+.show-word-trail #word-trail {
   display: block;
 }
 
-body.image-mode #word-trail {
-  display: none;
-}
-
-body.image-mode .card {
-  display: none;
-}
-
-
-body.word-mode #image-trail {
-  display: none;
-}
-
-body.word-mode #word-trail {
+.show-image-trail #image-trail {
   display: block;
 }
 
-body.word-mode .card {
-  display: none;
-}
-
-
-body.card-mode #image-trail {
-  display: none;
-}
-
-body.card-mode #word-trail {
-  display: none;
-}
-
-body.card-mode .card {
-  display: block;
-}
-
-
-/* =========================
-   BLACK SCREEN
-========================= */
+/* =========================================================
+   BLACK TRANSITION
+   ========================================================= */
 
 #black-transition {
   position: fixed;
-
   inset: 0;
-
   width: 100vw;
   height: 100vh;
-
   background: black;
-
-  z-index: 400;
-
   opacity: 0;
-
   pointer-events: none;
-
-  transition:
-    opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 400;
+  transition: opacity 0.8s ease;
 }
 
-
-body.black-transition h1 {
-
-  transform:
-    translate(-50%, -50%)
-    scale(14);
-
-  opacity: 0;
-
-  transition:
-    transform 1.15s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.75s ease;
-}
-
-body.black-transition #black-transition {
+#black-transition.show {
   opacity: 1;
-}
-
-
-body.black-mode {
-  background: black;
-}
-
-body.black-mode h1,
-body.black-mode .floating-space,
-body.black-mode #image-trail,
-body.black-mode #word-trail {
-  display: none;
-}
-
-body.black-mode #black-transition {
-  opacity: 1;
-
   pointer-events: auto;
 }
 
+/* =========================================================
+   ADD CARD
+   ========================================================= */
 
-/* =========================
-   ADD YOUR OWN CARD
-========================= */
+.add-card {
+  cursor: grab;
+  z-index: 20;
+}
+
+.add-card:active {
+  cursor: grabbing;
+}
 
 .add-card-front {
-  background: #f4f4f4;
-
   display: flex;
-
   align-items: center;
   justify-content: center;
-
+  background: white;
   border: 1px solid #e5e5e5;
-}
-
-.add-card-front span {
-  font-size: 42px;
-
+  font-size: 48px;
   font-weight: 300;
-
-  line-height: 1;
-
-  transition:
-    transform 0.3s ease;
+  color: black;
+  transition: background-image 0.3s ease;
 }
 
-.add-card:hover .add-card-front span {
-  transform: rotate(90deg);
+.add-card-front.has-image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: none;
 }
 
-
-/* =========================
-   CUSTOM CARD FORM
-========================= */
-
-.add-card-back {
+.add-card .card-back {
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 10px;
   background: #f4f4f4;
-
-  padding: 13px;
-
-  display: flex;
-
-  flex-direction: column;
-
-  justify-content: space-between;
-
-  gap: 8px;
 }
+
+/* =========================================================
+   CUSTOM CARD FORM
+   ========================================================= */
 
 .add-card-back label {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 4px;
-
-  font-size: 7px;
-
+  display: block;
+  font-size: 6px;
+  line-height: 1.1;
   font-weight: 700;
-
-  letter-spacing: 0.05em;
+  flex-shrink: 0;
 }
 
-.add-card-back input,
-.add-card-back textarea {
+#custom-rule-title,
+#custom-rule-description {
+  display: block;
   width: 100%;
-
   border: none;
-
-  border-bottom: 1px solid #bbb;
-
-  background: transparent;
-
   outline: none;
-
+  background: transparent;
   font-family: Helvetica, Arial, sans-serif;
-
-  font-size: 9px;
-
-  padding: 3px 0;
-
+  color: black;
   resize: none;
 }
 
-.add-card-back textarea {
-  height: 35px;
+#custom-rule-title {
+  font-size: 9px;
+  line-height: 1.05;
+  font-weight: 700;
+  margin-top: 5px;
 }
 
-.add-card-back input::placeholder,
-.add-card-back textarea::placeholder {
+#custom-rule-description {
+  font-size: 7px;
+  line-height: 1.15;
+  height: 28px;
+  margin-top: 5px;
+}
+
+#custom-rule-title::placeholder,
+#custom-rule-description::placeholder {
   color: #999;
 }
 
-.add-card-back button {
+/* =========================================================
+   SAVE BUTTON
+   ========================================================= */
+
+#save-custom-card {
   border: none;
-
   background: black;
-
   color: white;
-
-  padding: 6px 8px;
-
-  border-radius: 20px;
-
+  padding: 5px 8px;
+  border-radius: 100px;
   font-family: Helvetica, Arial, sans-serif;
-
   font-size: 7px;
-
   font-weight: 700;
-
-  letter-spacing: 0.04em;
-
   cursor: pointer;
+  margin-top: auto;
+  align-self: flex-start;
+  flex-shrink: 0;
 }
 
-.add-card-back button:hover {
+#save-custom-card:hover {
   opacity: 0.7;
 }
 
+/* =========================================================
+   CUSTOM CARDS
+   ========================================================= */
 
-/* =========================
-   CUSTOM IMAGE
-========================= */
-
-.add-card.has-image .add-card-front {
-  background-size: cover;
-
-  background-position: center;
-
-  background-repeat: no-repeat;
+.custom-completed-card {
+  z-index: 15;
 }
 
-.add-card.has-image .add-card-front span {
+.custom-card-entering {
+  transition:
+    left 1s cubic-bezier(0.16, 1, 0.3, 1),
+    top 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* =========================================================
+   FILE INPUT
+   ========================================================= */
+
+#custom-image-input {
   display: none;
 }
 
+/* =========================================================
+   FLOATING MOTION
+   NO ROTATION
+   ========================================================= */
 
-/* =========================
+@keyframes cardFloat {
+  0% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(
+      calc(var(--move-x) * 0.45),
+      calc(var(--move-y) * 0.30)
+    );
+  }
+  40% {
+    transform: translate(
+      calc(var(--move-x) * -0.25),
+      calc(var(--move-y) * 0.75)
+    );
+  }
+  60% {
+    transform: translate(
+      calc(var(--move-x) * 0.80),
+      calc(var(--move-y) * -0.35)
+    );
+  }
+  80% {
+    transform: translate(
+      calc(var(--move-x) * -0.55),
+      calc(var(--move-y) * 0.55)
+    );
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* =========================================================
    MOBILE
-========================= */
+   ========================================================= */
 
 @media (max-width: 700px) {
-
-  h1 {
+  #title {
     font-size: 24px;
   }
 
@@ -590,16 +714,95 @@ body.black-mode #black-transition {
     height: 120px;
   }
 
-  .card-back {
-    padding: 11px;
+  .trail-image {
+    width: 75px;
+    height: 75px;
   }
 
-  .card-back h2 {
-    font-size: 13px;
+  .trail-word {
+    font-size: 15px;
   }
+}
 
-  .card-back p {
-    font-size: 8px;
-  }
+/* =========================================================
+   TEXT CARDS OUTSIDE THE RECTANGLE
+   ========================================================= */
 
+body.cards-expanded .card.flipped {
+  z-index: 3000;
+  margin: 0;
+}
+
+/* Enlarge only the flipped text cards */
+body.cards-expanded .card.flipped .card-inner {
+  transform: rotateY(180deg) scale(2.5);
+  transform-origin: center;
+}
+
+/* Keep text formatting unchanged */
+body.cards-expanded .card.flipped .card-back {
+  width: 100%;
+  height: 100%;
+  padding: 14px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+body.cards-expanded .card.flipped .card-back h2 {
+  font-size: 16px;
+  line-height: 1.1;
+  margin-bottom: 5px;
+}
+
+body.cards-expanded .card.flipped .card-back p {
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+/* Keep the surrounding area from clipping cards */
+body.cards-expanded .floating-space {
+  overflow: visible;
+}
+
+
+.add-card {
+  position: absolute;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  animation: none !important;
+}
+
+
+/* CUSTOM CARDS: MATCH ORIGINAL TEXT STYLE */
+
+.custom-completed-card .card-back h2 {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  line-height: 1.05;
+  font-weight: 700;
+  margin-top: auto;
+  margin-bottom: 5px;
+}
+
+.custom-completed-card .card-back p {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 7px;
+  line-height: 1.25;
+  font-weight: 400;
+  margin: 0;
+}
+
+/* Match the original enlarged text when cards are expanded */
+
+body.cards-expanded .custom-completed-card.flipped .card-back h2 {
+  font-size: 16px;
+  line-height: 1.1;
+  margin-bottom: 5px;
+}
+
+body.cards-expanded .custom-completed-card.flipped .card-back p {
+  font-size: 11px;
+  line-height: 1.25;
+  margin: 0;
 }
