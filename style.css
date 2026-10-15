@@ -69,6 +69,14 @@ body {
   padding: 110px 24px;
 }
 
+#title .title-dashes {
+  color: white;
+}
+
+#title {
+  color: black;
+}
+
 
 #title.intro-zoom {
   animation: titleTransform 1.7s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
@@ -574,6 +582,33 @@ body.trail-paused #word-trail {
   background: #f4f4f4;
 }
 
+/* Keep the + card and its text form inside the boundary */
+.add-card {
+  box-sizing: border-box;
+  max-width: min(240px, 80vw);
+}
+
+.add-card.flipped {
+  animation: none !important;
+  z-index: 100;
+}
+
+/* Keep the form content within the card */
+.add-card .add-card-back {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.add-card .add-card-back input,
+.add-card .add-card-back textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
+}
+
+
 /* =========================================================
    CUSTOM CARD FORM
    ========================================================= */
@@ -765,12 +800,12 @@ body.cards-expanded .floating-space {
 }
 
 
+
 .add-card {
   position: absolute;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  animation: none !important;
+  left: var(--x);
+  top: var(--y);
+  transform: none;
 }
 
 
