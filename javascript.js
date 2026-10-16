@@ -24,6 +24,7 @@ let transitioning = false;
 let flippedCards = [];
 let customImageURL = null;
 
+
 /* =========================================================
    BOUNDARY SCALE HANDLES
    ========================================================= */
@@ -43,7 +44,6 @@ function applyBoundaryScale(scale) {
 
   body.classList.toggle("boundary-scaled", boundaryScale < 0.995);
 
-  // Keep the + card inside the visible playground.
   requestAnimationFrame(() => {
     keepAddCardInsideBoundary();
   });
@@ -64,7 +64,9 @@ function attachScaleHandle(handle, direction) {
     startScale = boundaryScale;
 
     body.classList.add(
-      direction === "boundary" ? "boundary-dragging" : "zoom-dragging"
+      direction === "boundary"
+        ? "boundary-dragging"
+        : "zoom-dragging"
     );
 
     try {
@@ -78,10 +80,9 @@ function attachScaleHandle(handle, direction) {
     if (!dragging) return;
 
     const distance = event.clientY - startY;
-
     const change = direction === "boundary"
       ? -distance / window.innerHeight
-      : distance / window.innerHeight;
+      : -distance / window.innerHeight;
 
     applyBoundaryScale(startScale + change);
   });
@@ -92,7 +93,9 @@ function attachScaleHandle(handle, direction) {
     dragging = false;
 
     body.classList.remove(
-      direction === "boundary" ? "boundary-dragging" : "zoom-dragging"
+      direction === "boundary"
+        ? "boundary-dragging"
+        : "zoom-dragging"
     );
 
     try {
